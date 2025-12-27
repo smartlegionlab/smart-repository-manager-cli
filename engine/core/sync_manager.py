@@ -1,0 +1,229 @@
+# Copyright (©) 2025, Alexander Suvorov. All rights reserved.
+import subprocess
+import time
+
+from engine.utils.decorator import (
+    Colors,
+    clear_screen,
+    print_section,
+    print_info, Icons,
+    print_success,
+    print_error,
+    print_warning,
+    wait_for_enter,
+    print_menu_item
+)
+from smart_repository_manager_core.utils.helpers import Helpers
+
+
+class SyncManager:
+    def __init__(self, cli):
+        self.cli = cli
+
+    def show_sync_menu(self):
+        self.cli.menu_stack.append(self.cli.current_menu)
+        self.cli.current_menu = "sync"
+
+        while self.cli.current_menu == "sync":
+            clear_screen()
+            print_section("SYNCHRONIZATION")
+
+            print(f"\n{Colors.BOLD}📊 Status:{Colors.END}")
+            print(f"  • Local repositories: {self.cli.ui_state.get('local_repositories_count', 0)}")
+            print(f"  • Needs update: {self.cli.ui_state.get('needs_update_count', 0)}")
+
+            print(f"\n{Colors.BOLD}🔄 Commands:{Colors.END}")
+            print_menu_item("1", "Synchronize All", Icons.SYNC)
+            print_menu_item("2", "Update Needed Only", Icons.SYNC)
+            print_menu_item("3", "Clone Missing Only", Icons.DOWNLOAD)
+            print_menu_item("4", "Sync with Repair", Icons.SETTINGS)
+
+            print(f"\n{Colors.BOLD}{Colors.BLUE}0.{Colors.END} {Icons.BACK} Back")
+            print('=' * 60)
+
+            choice = self.cli._get_menu_choice("Select option", 0, 4)
+
+            if choice == 0:
+                self.cli.current_menu = self.cli.menu_stack.pop()
+            elif choice == 1:
+                self.sync_all_repositories()
+            elif choice == 2:
+                self.update_needed_repositories()
+            elif choice == 3:
+                self.sync_missing_repositories()
+            elif choice == 4:
+                self.sync_with_repair()
+
+            if choice != 0:
+                wait_for_enter()
+
+    def sync_all_repositories(self):
+        self.sync_missing_repositories()
+
+    def update_needed_repositories(self):
+        clear_screen()
+        print_section("UPDATE NEEDED REPOSITORIES")
+
+        if not self.cli.current_user or not self.cli.repositories:
+            print_error("User or repositories not loaded")
+            return
+
+        self.sync_missing_repositories()
+
+    def sync_missing_repositories(self):
+        clear_screen()
+        print_section("CLONE MISSING REPOSITORIES")
+
+        if not self.cli.current_user or not self.cli.repositories:
+            print_error("User or repositories not loaded")
+            return
+
+        structure = self.cli.structure_service.get_user_structure(self.cli.current_user.username)
+        if "repositories" not in structure:
+            print_error("Storage structure not found")
+            return
+
+        repos_path = structure["repositories"]
+        missing_repos = []
+
+        for repo in self.cli.repositories:
+            if not repo.ssh_url:
+                continue
+
+            repo_path = repos_path / repo.name
+            if not repo_path.exists() or not (repo_path / '.git').exists():
+                missing_repos.append(repo)
+
+        if not missing_repos:
+            print_success("All repositories are already cloned")
+            return
+
+        print(f"\n{Colors.BOLD}Found {len(missing_repos)} missing repositories:{Colors.END}")
+        for i, repo in enumerate(missing_repos[:10], 1):
+            print(f"  {i}. {repo.name}")
+
+        if len(missing_repos) > 10:
+            print(f"  ... and {len(missing_repos) - 10} more")
+
+        if not self.cli.ask_yes_no(f"\nClone {len(missing_repos)} missing repositories?"):
+            return
+
+        print_info(f"\nStarting cloning of {len(missing_repos)} repositories...")
+
+        stats = {
+            "cloned": 0,
+            "failed": 0,
+            "skipped": 0,
+            "durations": []
+        }
+
+        for i, repo in enumerate(missing_repos, 1):
+            print(f"\n[{i}/{len(missing_repos)}] Cloning: {repo.name}")
+
+            start_time = time.time()
+            success, message, duration = self.cli.sync_service.sync_single_repository(
+                self.cli.current_user,
+                repo,
+                "clone"
+            )
+
+            stats["durations"].append(duration)
+
+            if success:
+                print_success(f"Cloned successfully ({Helpers.format_duration(duration)})")
+                stats["cloned"] += 1
+            else:
+                print_error(f"Failed: {message}")
+                stats["failed"] += 1
+
+        self.cli._show_sync_summary(stats, "Cloning")
+
+    def sync_with_repair(self):
+        clear_screen()
+        print_section("SYNC WITH REPAIR")
+
+        if not self.cli.current_user or not self.cli.repositories:
+            print_error("User or repositories not loaded")
+            return
+
+        print_info("This will check and repair broken repositories")
+        print_warning("Broken repositories will be re-cloned")
+
+        if not self.cli.ask_yes_no("Continue with repair sync?"):
+            return
+
+        structure = self.cli.structure_service.get_user_structure(self.cli.current_user.username)
+        if "repositories" not in structure:
+            print_error("Storage structure not found")
+            return
+
+        repos_path = structure["repositories"]
+
+        broken_repos = []
+        for repo in self.cli.repositories:
+            if not repo.ssh_url:
+                continue
+
+            repo_path = repos_path / repo.name
+            if repo_path.exists():
+                if not (repo_path / '.git').exists():
+                    broken_repos.append(repo)
+                else:
+                    try:
+                        result = subprocess.run(
+                            ['git', '-C', str(repo_path), 'rev-parse', '--git-dir'],
+                            capture_output=True,
+                            text=True,
+                            timeout=5
+                        )
+                        if result.returncode != 0:
+                            broken_repos.append(repo)
+                    except:
+                        broken_repos.append(repo)
+
+        if broken_repos:
+            print(f"\n{Colors.BOLD}Found {len(broken_repos)} broken repositories:{Colors.END}")
+            for i, repo in enumerate(broken_repos[:5], 1):
+                print(f"  {i}. {repo.name}")
+
+            if len(broken_repos) > 5:
+                print(f"  ... and {len(broken_repos) - 5} more")
+
+        print_info(f"\nStarting repair sync for {len(self.cli.repositories)} repositories...")
+
+        stats = {
+            "synced": 0,
+            "repaired": 0,
+            "failed": 0,
+            "skipped": 0,
+            "durations": []
+        }
+
+        for i, repo in enumerate(self.cli.repositories, 1):
+            if not repo.ssh_url:
+                stats["skipped"] += 1
+                continue
+
+            print(f"\n[{i}/{len(self.cli.repositories)}] Processing: {repo.name}")
+
+            start_time = time.time()
+            success, message, duration = self.cli.sync_service.sync_single_repository(
+                self.cli.current_user,
+                repo,
+                "sync"
+            )
+
+            stats["durations"].append(duration)
+
+            if success:
+                if "repaired" in message.lower() or "re-cloned" in message.lower():
+                    print_success(f"Repaired: {message} ({Helpers.format_duration(duration)})")
+                    stats["repaired"] += 1
+                else:
+                    print_success(f"Synced: {message} ({Helpers.format_duration(duration)})")
+                    stats["synced"] += 1
+            else:
+                print_error(f"Failed: {message}")
+                stats["failed"] += 1
+
+        self.cli._show_sync_summary(stats, "Repair Sync")
