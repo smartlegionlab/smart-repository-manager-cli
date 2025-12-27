@@ -28,7 +28,7 @@ class MenuHandlers:
 
         while self.cli.running:
             clear_screen()
-            print_section("MAIN MENU")
+            print_section("Smart Repository Manager v0.1.1")
 
             if not self.cli.current_user or not self.cli.repositories:
                 print_error("User or repositories not loaded.")
