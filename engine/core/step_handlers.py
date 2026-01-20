@@ -1,5 +1,6 @@
 # Copyright (©) 2025, Alexander Suvorov. All rights reserved.
 import shutil
+import sys
 from pathlib import Path
 from datetime import datetime
 
@@ -232,8 +233,9 @@ class StepHandlers:
                 print(f"\n    {len(config.users) + 1}. Add new user")
                 print(f"    {len(config.users) + 2}. Delete user")
                 print(f"    {len(config.users) + 3}. Continue without changes")
+                print(f"    {len(config.users) + 4}. Exit")
 
-                choice = self.cli._get_menu_choice("Select action", 1, len(config.users) + 3)
+                choice = self.cli._get_menu_choice("Select action", 1, len(config.users) + 4)
 
                 if choice <= len(config.users):
                     username = list(config.users.keys())[choice - 1]
@@ -251,6 +253,8 @@ class StepHandlers:
 
                 elif choice == len(config.users) + 2:
                     return self.delete_user_step(config_service, config)
+                elif choice == len(config.users) + 4:
+                    sys.exit(1)
 
                 else:
                     if config.active_user:

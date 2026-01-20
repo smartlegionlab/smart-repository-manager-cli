@@ -36,8 +36,6 @@ class MenuHandlers:
                 wait_for_enter()
                 return
 
-            self.cli._update_ui_state()
-
             print(f"\n{Colors.BOLD}📊 System Status:{Colors.END}")
             print(f"  • {Icons.USER} User: {Colors.CYAN}{self.cli.current_user.username}{Colors.END}")
             print(f"\n{Colors.BOLD}📊 Repositories Status:{Colors.END}")

@@ -32,6 +32,26 @@ class UIStateManager:
         self.state['last_update'] = datetime.now().isoformat()
         return self
 
+    def get_all_repositories(self, repos):
+        self.state["repositories_count"] = len(repos)
+        return self.state
+
+    def get_local_repositories(self, repos):
+
+        for repo in repos:
+            if repo.local_exists:
+                self.state["local_repositories_count"] += 1
+
+        return self.state
+
+    def get_private_public_repositories(self, repos):
+        for repo in repos:
+            if repo.private:
+                self.state["total_private"] += 1
+            else:
+                self.state["total_public"] += 1
+        return self.state
+
     def bulk_update(self, data: Dict[str, Any]):
         self.state.update(data)
         self.state['last_update'] = datetime.now().isoformat()
