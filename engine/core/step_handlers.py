@@ -477,6 +477,8 @@ class StepHandlers:
 
             print(f"\n  {Colors.BOLD}Repository examples:{Colors.END}")
 
+            self.cli._update_ui_state()
+
             return success
 
         except Exception as e:
