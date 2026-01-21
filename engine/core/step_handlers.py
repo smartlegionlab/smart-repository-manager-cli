@@ -1,6 +1,7 @@
 # Copyright (©) 2025, Alexander Suvorov. All rights reserved.
 import shutil
 import sys
+import getpass
 from pathlib import Path
 from datetime import datetime
 
@@ -289,7 +290,7 @@ class StepHandlers:
             print("  4. Copy the generated token")
             print()
 
-            token = input(f"  {Colors.CYAN}Enter GitHub token: {Colors.END}").strip()
+            token = getpass.getpass(f"  {Colors.CYAN}Enter GitHub token: {Colors.END}").strip()
 
             if not token:
                 if self.cli.ask_yes_no("Cancel adding user?"):
@@ -479,7 +480,7 @@ class StepHandlers:
                 data
             )
 
-            print(f"\n  {Colors.BOLD}Repository examples:{Colors.END}")
+            print(f"\n  {Colors.BOLD}Preparing content:{Colors.END}")
 
             self.cli._update_ui_state()
 
