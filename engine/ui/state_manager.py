@@ -1,4 +1,5 @@
 # Copyright (©) 2025, Alexander Suvorov. All rights reserved.
+from pathlib import Path
 from typing import Dict, Any
 from datetime import datetime
 
@@ -36,10 +37,13 @@ class UIStateManager:
         self.state["repositories_count"] = len(repos)
         return self.state
 
-    def get_local_repositories(self, repos):
+    def get_local_repositories(self, repos, username):
+
+        repos_path = Path.home() / "smart_repo_manager" / username / "repositories"
 
         for repo in repos:
-            if repo.local_exists:
+            repo_path = repos_path / repo.name
+            if repo_path.exists():
                 self.state["local_repositories_count"] += 1
 
         return self.state

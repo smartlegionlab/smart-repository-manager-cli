@@ -166,7 +166,7 @@ class SmartGitCLI:
 
     def _update_ui_state(self):
         self.ui_state.get_all_repositories(self.repositories)
-        self.ui_state.get_local_repositories(self.repositories)
+        self.ui_state.get_local_repositories(self.repositories, self.current_user.username)
         self.ui_state.get_private_public_repositories(self.repositories)
 
         self.ui_state.set('needs_update_count', self._calculate_needs_update_count())
