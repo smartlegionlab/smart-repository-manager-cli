@@ -118,7 +118,7 @@ class SyncManager:
         }
 
         for i, repo in enumerate(missing_repos, 1):
-            print(f"\n[{i}/{len(missing_repos)}] Cloning: {repo.name}")
+            print(f"\n[{i}/{len(missing_repos)}/{stats['failed']}] Cloning: {repo.name}")
 
             success, message, duration = self.cli.sync_service.sync_single_repository(
                 self.cli.current_user,
