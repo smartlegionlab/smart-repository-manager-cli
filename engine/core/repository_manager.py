@@ -83,17 +83,17 @@ class RepositoryManager:
             local_icon = Icons.SUCCESS if repo.local_exists else Icons.ERROR
 
             if repo.local_exists and self.cli.current_user:
-                needs_update = self.cli._get_repository_needs_update(repo)
-                update_icon = Icons.WARNING if needs_update else Icons.SUCCESS
+                needs_update = repo.need_update
+                update_icon = Icons.WARNING if not needs_update else Icons.SUCCESS
             else:
-                update_icon = Icons.ERROR if not repo.local_exists else Icons.SUCCESS
+                update_icon = Icons.WARNING if not repo.need_update else Icons.SUCCESS
 
             private_icon = Icons.LOCK if repo.private else Icons.UNLOCK
             size_mb = repo.size / 1024 if repo.size else 0
 
             rows.append([
                 i,
-                repo.name[:25],
+                repo.name[:30],
                 local_icon,
                 update_icon,
                 private_icon,
