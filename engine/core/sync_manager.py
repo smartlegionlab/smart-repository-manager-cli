@@ -73,10 +73,59 @@ class SyncManager:
         clear_screen()
         print_section("SYNC ALL REPOSITORIES")
 
+        structure = self.cli.structure_service.get_user_structure(self.cli.current_user.username)
+        if "repositories" not in structure:
+            print_error("Storage structure not found")
+            return
+
         repo_list = self.cli.repositories
 
-        for repo in repo_list:
-            print(f"Repo: {repo.name}")
+        print(f"\n{Colors.BOLD}Found {len(repo_list)} repositories:{Colors.END}")
+        for i, repo in enumerate(repo_list[:10], 1):
+            print(f"  {i}. {repo.name}")
+
+        if len(repo_list) > 10:
+            print(f"  ... and {len(repo_list) - 10} more")
+
+        if not self.cli.ask_yes_no(f"\nSync {len(repo_list)} repositories?"):
+            return
+
+        print_info(f"\nStarting sync of {len(repo_list)} repositories...")
+
+        stats = {
+            "cloned": 0,
+            "failed": 0,
+            "skipped": 0,
+            "durations": []
+        }
+
+        for i, repo in enumerate(repo_list, 1):
+            print(f"\n[{i}/{len(repo_list)}/{stats['failed']}] Sync: {repo.name}")
+
+            if repo.local_exists:
+                success, message, duration = self.cli.sync_service.sync_single_repository(
+                    self.cli.current_user,
+                    repo,
+                    "pull"
+                )
+            else:
+                success, message, duration = self.cli.sync_service.sync_single_repository(
+                    self.cli.current_user,
+                    repo,
+                    "clone"
+                )
+
+            stats["durations"].append(duration)
+
+            if success:
+                print_success(f"{message} ({Helpers.format_duration(duration)})")
+                stats["cloned"] += 1
+            else:
+                print_error(f"Failed: {message}")
+                stats["failed"] += 1
+
+        self.cli._show_sync_summary(stats, "Cloning")
+
 
     def update_needed_repositories(self):
         clear_screen()
