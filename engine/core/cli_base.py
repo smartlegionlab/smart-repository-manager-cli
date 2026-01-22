@@ -79,6 +79,18 @@ class SmartGitCLI:
     def get_local_exist_repos_count(self):
         return len(self.get_local_exist_repos())
 
+    def get_public_repos(self):
+        return [repo for repo in self.repositories if not repo.private]
+
+    def get_public_repos_count(self):
+        return len(self.get_public_repos())
+
+    def get_private_repos(self):
+        return [repo for repo in self.repositories if repo.private]
+
+    def get_private_repos_count(self):
+        return len(self.get_private_repos())
+
     def _signal_handler(self, signum, frame):
         _ = signum, frame
         print(f"\n\n{Colors.RED}Interrupt signal received. Exiting...{Colors.END}")

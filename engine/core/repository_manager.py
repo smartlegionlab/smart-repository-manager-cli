@@ -33,7 +33,8 @@ class RepositoryManager:
             print(f"  • Total repositories: {len(self.cli.repositories)}")
             print(f"  • Local repositories: {self.cli.get_local_exist_repos_count()}")
             print(f"  • Needs update: {self.cli.get_need_update_repos_count()}")
-            print(f"  • Private repositories: {self.cli.ui_state.get('total_private', 0)}")
+            print(f"  • Private repositories: {self.cli.get_private_repos_count()}")
+            print(f"  • Public repositories: {self.cli.get_public_repos_count()}")
             print(f"  • Archived repositories: {self.cli.ui_state.get('total_archived', 0)}")
             print(f"  • Forks: {self.cli.ui_state.get('total_forks', 0)}")
 

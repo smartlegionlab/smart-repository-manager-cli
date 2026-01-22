@@ -43,16 +43,16 @@ class MenuHandlers:
             print(f"  • {Icons.USER} User: {Colors.CYAN}{self.cli.current_user.username}{Colors.END}")
             print(f"\n{Colors.BOLD}📊 Repositories Status:{Colors.END}")
             print(
-                f"  • {Icons.REPO} Total repositories: {Colors.CYAN}{self.cli.ui_state.get('repositories_count', 0)}{Colors.END}")
+                f"  • {Icons.REPO} Total repositories: {Colors.CYAN}{len(self.cli.repositories)}{Colors.END}")
             print(
                 f"  • {Icons.FOLDER} Local repositories: {Colors.CYAN}"
                 f"{self.cli.get_local_exist_repos_count()}{Colors.END}")
 
             if self.cli.ui_state.get('total_public', 0) > 0:
-                print(f"  • {Icons.LOCK} Public repositories: {self.cli.ui_state.get('total_public')}")
+                print(f"  • {Icons.LOCK} Public repositories: {self.cli.get_public_repos_count()}")
 
             if self.cli.ui_state.get('total_private', 0) > 0:
-                print(f"  • {Icons.LOCK} Private repositories: {self.cli.ui_state.get('total_private')}")
+                print(f"  • {Icons.LOCK} Private repositories: {self.cli.get_private_repos_count()}")
 
             if self.cli.ui_state.get('total_archived', 0) > 0:
                 print(f"  • {Icons.STORAGE} Archived repositories: {self.cli.ui_state.get('total_archived')}")
