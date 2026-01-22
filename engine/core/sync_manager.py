@@ -330,11 +330,8 @@ class SyncManager:
 
         if broken_repos:
             print(f"\n{Colors.BOLD}Found {len(broken_repos)} broken repositories:{Colors.END}")
-            for i, repo in enumerate(broken_repos[:5], 1):
+            for i, repo in enumerate(broken_repos, 1):
                 print(f"  {i}. {repo.name}")
-
-            if len(broken_repos) > 5:
-                print(f"  ... and {len(broken_repos) - 5} more")
 
         print_info(f"\nStarting repair sync for {len(self.cli.repositories)} repositories...")
 

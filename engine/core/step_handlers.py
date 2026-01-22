@@ -11,6 +11,8 @@ from smart_repository_manager_core.services.config_service import ConfigService
 from smart_repository_manager_core.services.github_service import GitHubService
 from smart_repository_manager_core.services.ssh_service import SSHService
 
+from engine import __version__ as ver
+
 
 class StepHandlers:
     def __init__(self, cli):
@@ -28,7 +30,7 @@ class StepHandlers:
                 "Configuration loaded",
                 {
                     "app_name": config.app_name,
-                    "version": config.version,
+                    "version": ver,
                     "users_count": len(config.users),
                     "active_user": config.active_user or "Not selected"
                 }
