@@ -248,11 +248,8 @@ class SyncManager:
             return
 
         print(f"\n{Colors.BOLD}Found {len(missing_repos)} missing repositories:{Colors.END}")
-        for i, repo in enumerate(missing_repos[:10], 1):
+        for i, repo in enumerate(missing_repos, 1):
             print(f"  {i}. {repo.name}")
-
-        if len(missing_repos) > 10:
-            print(f"  ... and {len(missing_repos) - 10} more")
 
         if not self.cli.ask_yes_no(f"\nClone {len(missing_repos)} missing repositories?"):
             return
