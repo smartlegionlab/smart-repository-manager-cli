@@ -167,7 +167,7 @@ class SmartGitCLI:
         print(f"\n{Colors.BOLD}📊 Results:{Colors.END}")
         for key, value in stats.items():
             if key != "durations" and isinstance(value, int):
-                icon = Icons.SUCCESS if value > 0 and key in ["cloned", "synced", "repaired"] else Icons.INFO
+                icon = Icons.SUCCESS if value > 0 and key in ["cloned", "synced", "repaired", "updated"] else Icons.INFO
                 print(f"  {icon} {key.replace('_', ' ').title()}: {value}")
 
         if stats["durations"]:

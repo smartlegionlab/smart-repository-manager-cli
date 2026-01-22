@@ -82,11 +82,8 @@ class SyncManager:
         repo_list = self.cli.repositories
 
         print(f"\n{Colors.BOLD}Found {len(repo_list)} repositories:{Colors.END}")
-        for i, repo in enumerate(repo_list[:10], 1):
+        for i, repo in enumerate(repo_list, 1):
             print(f"  {i}. {repo.name}")
-
-        if len(repo_list) > 10:
-            print(f"  ... and {len(repo_list) - 10} more")
 
         if not self.cli.ask_yes_no(f"\nSync {len(repo_list)} repositories?"):
             return
@@ -137,8 +134,49 @@ class SyncManager:
             return
 
         repo_list = self.cli.get_need_update_repos()
-        for repo in repo_list:
-            print(f"Repo: {repo.name}: {repo.need_update}")
+
+        if not repo_list:
+            print('All repositories are up to date...')
+            return
+
+        structure = self.cli.structure_service.get_user_structure(self.cli.current_user.username)
+        if "repositories" not in structure:
+            print_error("Storage structure not found")
+            return
+
+        print(f"\n{Colors.BOLD}Found {len(repo_list)} repositories:{Colors.END}")
+        for i, repo in enumerate(repo_list, 1):
+            print(f"  {i}. {repo.name}")
+
+        if not self.cli.ask_yes_no(f"\nUpdate {len(repo_list)} repositories?"):
+            return
+
+        stats = {
+            "updated": 0,
+            "failed": 0,
+            "skipped": 0,
+            "durations": []
+        }
+
+        for i, repo in enumerate(repo_list, 1):
+            print(f"\n[{i}/{len(repo_list)}/{stats['failed']}] Sync: {repo.name}")
+
+            success, message, duration = self.cli.sync_service.sync_single_repository(
+                self.cli.current_user,
+                repo,
+                "pull"
+            )
+
+            stats["durations"].append(duration)
+
+            if success:
+                print_success(f"{message} ({Helpers.format_duration(duration)})")
+                stats["updated"] += 1
+            else:
+                print_error(f"Failed: {message}")
+                stats["failed"] += 1
+
+        self.cli._show_sync_summary(stats, "Updating")
 
 
     def sync_missing_repositories(self):
