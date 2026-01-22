@@ -88,7 +88,7 @@ class RepositoryManager:
             else:
                 update_icon = Icons.WARNING if not repo.need_update else Icons.SUCCESS
 
-            private_icon = Icons.LOCK if repo.private else Icons.UNLOCK
+            private_icon = Icons.LOCK if repo.private else Icons.NETWORK
             size_mb = repo.size / 1024 if repo.size else 0
 
             rows.append([
