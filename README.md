@@ -299,7 +299,7 @@ Detailed JSON logs are saved for each system checkup, including:
 
 BSD 3-Clause License - See [LICENSE](LICENSE) file for details.
 
-Copyright © 2025, Alexander Suvorov. All rights reserved.
+Copyright © 2026, Alexander Suvorov. All rights reserved.
 
 ---
 

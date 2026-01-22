@@ -1,4 +1,4 @@
-# Copyright (©) 2025, Alexander Suvorov. All rights reserved.
+# Copyright (©) 2026, Alexander Suvorov. All rights reserved.
 import shutil
 from datetime import datetime
 
@@ -19,6 +19,7 @@ from smart_repository_manager_core.services.ssh_service import SSHService
 from smart_repository_manager_core.utils.helpers import Helpers
 
 from engine import __version__ as ver
+from engine import __copyright__ as copyright_
 
 
 class MenuHandlers:
@@ -79,6 +80,9 @@ class MenuHandlers:
 
             if choice == 0:
                 print_success("Goodbye!")
+
+                print_section(f"{copyright_}")
+
                 break
             elif choice == 1:
                 self.show_user_info()

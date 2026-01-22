@@ -1,4 +1,4 @@
-# Copyright (©) 2025, Alexander Suvorov. All rights reserved.
+# Copyright (©) 2026, Alexander Suvorov. All rights reserved.
 from engine.utils.decorator import Colors, clear_screen, print_section, print_menu_item, Icons
 
 
@@ -38,7 +38,7 @@ class MenuRenderer:
         print_menu_item("7", "System Information", Icons.INFO)
 
         print(f"\n{Colors.BOLD}⚙️  System:{Colors.END}")
-        print_menu_item("8", "Run Checkup", Icons.CHECK)
+        print_menu_item("8", "Restart", Icons.CHECK)
         print_menu_item("9", "Clean Temporary Files", Icons.DELETE)
 
         print(f"\n{Colors.BOLD}{Colors.RED}0.{Colors.END} {Icons.EXIT} Exit")
