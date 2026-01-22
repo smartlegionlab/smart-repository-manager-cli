@@ -254,15 +254,14 @@ class RepositoryManager:
             return
 
         print("Available repositories:")
-        for i, repo in enumerate(self.cli.repositories[:20], 1):
+        for i, repo in enumerate(self.cli.repositories, 1):
             print(f"{i:2d}. {repo.name}")
 
-        if len(self.cli.repositories) > 20:
-            print(f"... and {len(self.cli.repositories) - 20} more")
-
         try:
-            choice = self.cli._get_menu_choice(f"\nSelect repository [1-{min(20, len(self.cli.repositories))}]", 1,
-                                               min(20, len(self.cli.repositories)))
+            choice = self.cli._get_menu_choice(f"\nSelect repository (0 for exit)", 0, len(self.cli.repositories))
+
+            if not choice:
+                return
 
             repo = self.cli.repositories[choice - 1]
 
