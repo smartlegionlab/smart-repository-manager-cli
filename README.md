@@ -140,7 +140,7 @@ python app.py
 - Review repository statistics
 - Monitor SSH status
 
-#### 8. **Run Checkup**
+#### 8. **Restart**
 - Perform complete system verification
 - Identify and fix issues
 - Generate detailed logs
