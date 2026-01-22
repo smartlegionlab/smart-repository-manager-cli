@@ -129,20 +129,20 @@ class RepositoryManager:
         headers = ["Name", "Local", "Updates", "Language", "Description"]
         rows = []
 
-        for repo in found_repos[:20]:
+        for repo in found_repos:
             local_icon = Icons.SUCCESS if repo.local_exists else Icons.ERROR
 
             if repo.local_exists and self.cli.current_user:
-                needs_update = self.cli._get_repository_needs_update(repo)
+                needs_update = repo.need_update
                 update_icon = Icons.WARNING if needs_update else Icons.SUCCESS
             else:
-                update_icon = Icons.ERROR if not repo.local_exists else Icons.SUCCESS
+                update_icon = Icons.WARNING if not repo.need_update else Icons.SUCCESS
 
             description = repo.description[:40] + "..." if repo.description and len(repo.description) > 40 else (
                         repo.description or "-")
 
             rows.append([
-                repo.name[:30],
+                repo.name[:50],
                 local_icon,
                 update_icon,
                 repo.language or "-",
@@ -179,13 +179,13 @@ class RepositoryManager:
         headers = ["Language", "Count", "Percentage"]
         rows = []
 
-        for lang, count in sorted_languages[:15]:
+        for lang, count in sorted_languages:
             percentage = (count / total_repos) * 100
             rows.append([lang, count, f"{percentage:.1f}%"])
 
         print_table(headers, rows)
 
-        other_count = total_repos - sum(count for _, count in sorted_languages[:15])
+        other_count = total_repos - sum(count for _, count in sorted_languages)
         if other_count > 0:
             print_info(f"Other languages: {other_count} repositories")
 
@@ -235,7 +235,7 @@ class RepositoryManager:
             except:
                 broken_count += 1
 
-        print(f"\n{Colors.BOLD}Health Status (first 20):{Colors.END}")
+        print(f"\n{Colors.BOLD}Health Status:{Colors.END}")
         print(f"  • {Icons.SUCCESS} Healthy: {healthy_count}")
         print(f"  • {Icons.ERROR} Broken: {broken_count}")
         print(f"  • {Icons.WARNING} Missing: {missing_count}")

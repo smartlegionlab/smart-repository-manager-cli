@@ -71,7 +71,7 @@ class MenuHandlers:
 
             print(f"\n{Colors.BOLD}⚙️  System:{Colors.END}")
             print_menu_item("8", "Restart", Icons.CHECK)
-            print_menu_item("9", "Clean Temporary Files", Icons.DELETE)
+            print_menu_item("9", " Clean Temporary Files", Icons.DELETE)
 
             print(f"\n{Colors.BOLD}{Colors.RED}0.{Colors.END} {Icons.EXIT} Exit")
             print('=' * 60)
