@@ -65,6 +65,9 @@ class SmartGitCLI:
 
         self.print_header()
 
+    def get_need_update_repos(self):
+        return [repo for repo in self.repositories if hasattr(repo, 'need_update') and repo.need_update]
+
     def _signal_handler(self, signum, frame):
         _ = signum, frame
         print(f"\n\n{Colors.RED}Interrupt signal received. Exiting...{Colors.END}")
@@ -139,6 +142,8 @@ class SmartGitCLI:
                 self.current_user,
                 repo
             )
+
+            repo.need_update = needs_update
 
             if needs_update:
                 needs_update_count += 1

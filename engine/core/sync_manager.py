@@ -31,16 +31,17 @@ class SyncManager:
             print(f"  • Local repositories: {self.cli.ui_state.get('local_repositories_count', 0)}")
             print(f"  • Needs update: {self.cli.ui_state.get('needs_update_count', 0)}")
 
-            print(f"\n{Colors.BOLD}🔄 Commands:{Colors.END}")
+            print(f"\n{Colors.BOLD}🔄Commands:{Colors.END}")
             print_menu_item("1", "Synchronize All", Icons.SYNC)
             print_menu_item("2", "Update Needed Only", Icons.SYNC)
             print_menu_item("3", "Clone Missing Only", Icons.DOWNLOAD)
             print_menu_item("4", "Sync with Repair", Icons.SETTINGS)
+            print_menu_item("5", "Re-clone All", Icons.SETTINGS)
 
             print(f"\n{Colors.BOLD}{Colors.BLUE}0.{Colors.END} {Icons.BACK} Back")
             print('=' * 60)
 
-            choice = self.cli._get_menu_choice("Select option", 0, 4)
+            choice = self.cli._get_menu_choice("Select option", 0, 5)
 
             if choice == 0:
                 self.cli.current_menu = self.cli.menu_stack.pop()
@@ -52,12 +53,30 @@ class SyncManager:
                 self.sync_missing_repositories()
             elif choice == 4:
                 self.sync_with_repair()
+            elif choice == 5:
+                self.reclone_all_repos()
 
             if choice != 0:
                 wait_for_enter()
 
+    def reclone_all_repos(self):
+        clear_screen()
+        print_section("RE-CLONE ALL REPOSITORIES")
+
+        repo_list = self.cli.repositories
+
+        for repo in repo_list:
+            print(f"Repo: {repo.name}")
+
+
     def sync_all_repositories(self):
-        self.sync_missing_repositories()
+        clear_screen()
+        print_section("SYNC ALL REPOSITORIES")
+
+        repo_list = self.cli.repositories
+
+        for repo in repo_list:
+            print(f"Repo: {repo.name}")
 
     def update_needed_repositories(self):
         clear_screen()
@@ -67,7 +86,10 @@ class SyncManager:
             print_error("User or repositories not loaded")
             return
 
-        self.sync_missing_repositories()
+        repo_list = self.cli.get_need_update_repos()
+        for repo in repo_list:
+            print(f"Repo: {repo.name}: {repo.need_update}")
+
 
     def sync_missing_repositories(self):
         clear_screen()
