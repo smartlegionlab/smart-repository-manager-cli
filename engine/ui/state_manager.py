@@ -1,4 +1,5 @@
 # Copyright (©) 2025, Alexander Suvorov. All rights reserved.
+from pathlib import Path
 from typing import Dict, Any
 from datetime import datetime
 
@@ -31,6 +32,29 @@ class UIStateManager:
         self.state.update(kwargs)
         self.state['last_update'] = datetime.now().isoformat()
         return self
+
+    def get_all_repositories(self, repos):
+        self.state["repositories_count"] = len(repos)
+        return self.state
+
+    def get_local_repositories(self, repos, username):
+
+        repos_path = Path.home() / "smart_repo_manager" / username / "repositories"
+
+        for repo in repos:
+            repo_path = repos_path / repo.name
+            if repo_path.exists():
+                self.state["local_repositories_count"] += 1
+
+        return self.state
+
+    def get_private_public_repositories(self, repos):
+        for repo in repos:
+            if repo.private:
+                self.state["total_private"] += 1
+            else:
+                self.state["total_public"] += 1
+        return self.state
 
     def bulk_update(self, data: Dict[str, Any]):
         self.state.update(data)

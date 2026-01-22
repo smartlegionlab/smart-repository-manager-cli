@@ -1,5 +1,7 @@
 # Copyright (©) 2025, Alexander Suvorov. All rights reserved.
 import shutil
+import sys
+import getpass
 from pathlib import Path
 from datetime import datetime
 
@@ -232,8 +234,9 @@ class StepHandlers:
                 print(f"\n    {len(config.users) + 1}. Add new user")
                 print(f"    {len(config.users) + 2}. Delete user")
                 print(f"    {len(config.users) + 3}. Continue without changes")
+                print(f"    {len(config.users) + 4}. Exit")
 
-                choice = self.cli._get_menu_choice("Select action", 1, len(config.users) + 3)
+                choice = self.cli._get_menu_choice("Select action", 1, len(config.users) + 4)
 
                 if choice <= len(config.users):
                     username = list(config.users.keys())[choice - 1]
@@ -251,6 +254,8 @@ class StepHandlers:
 
                 elif choice == len(config.users) + 2:
                     return self.delete_user_step(config_service, config)
+                elif choice == len(config.users) + 4:
+                    sys.exit(1)
 
                 else:
                     if config.active_user:
@@ -285,7 +290,7 @@ class StepHandlers:
             print("  4. Copy the generated token")
             print()
 
-            token = input(f"  {Colors.CYAN}Enter GitHub token: {Colors.END}").strip()
+            token = getpass.getpass(f"  {Colors.CYAN}Enter GitHub token: {Colors.END}").strip()
 
             if not token:
                 if self.cli.ask_yes_no("Cancel adding user?"):
@@ -475,7 +480,9 @@ class StepHandlers:
                 data
             )
 
-            print(f"\n  {Colors.BOLD}Repository examples:{Colors.END}")
+            print(f"\n  {Colors.BOLD}Preparing content:{Colors.END}")
+
+            self.cli._update_ui_state()
 
             return success
 

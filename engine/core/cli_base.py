@@ -165,45 +165,9 @@ class SmartGitCLI:
             print(f"  • Average per repo: {Helpers.format_duration(avg_time)}")
 
     def _update_ui_state(self):
-        if not self.repositories:
-            self.ui_state.bulk_update({
-                'repositories_count': 0,
-                'local_repositories_count': 0,
-                'needs_update_count': 0,
-                'total_private': 0,
-                'total_public': 0,
-                'total_archived': 0,
-                'total_forks': 0
-            })
-            return
-
-        local_count = 0
-        private_count = 0
-        public_count = 0
-        archived_count = 0
-        forks_count = 0
-
-        for repo in self.repositories:
-            if repo.local_exists:
-                local_count += 1
-            if repo.private:
-                private_count += 1
-            else:
-                public_count += 1
-            if repo.archived:
-                archived_count += 1
-            if repo.fork:
-                forks_count += 1
-
-        self.ui_state.bulk_update({
-            'repositories_count': len(self.repositories),
-            'local_repositories_count': local_count,
-            'total_private': private_count,
-            'total_public': public_count,
-            'total_archived': archived_count,
-            'total_forks': forks_count,
-            'current_user': self.current_user
-        })
+        self.ui_state.get_all_repositories(self.repositories)
+        self.ui_state.get_local_repositories(self.repositories, self.current_user.username)
+        self.ui_state.get_private_public_repositories(self.repositories)
 
         self.ui_state.set('needs_update_count', self._calculate_needs_update_count())
 
