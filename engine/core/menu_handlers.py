@@ -18,6 +18,8 @@ from smart_repository_manager_core.services.github_service import GitHubService
 from smart_repository_manager_core.services.ssh_service import SSHService
 from smart_repository_manager_core.utils.helpers import Helpers
 
+from engine import __version__ as ver
+
 
 class MenuHandlers:
     def __init__(self, cli):
@@ -28,7 +30,7 @@ class MenuHandlers:
 
         while self.cli.running:
             clear_screen()
-            print_section("Smart Repository Manager v0.1.2")
+            print_section(f"Smart Repository Manager {ver}")
 
             if not self.cli.current_user or not self.cli.repositories:
                 print_error("User or repositories not loaded.")
