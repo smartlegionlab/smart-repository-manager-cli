@@ -70,7 +70,7 @@ class MenuHandlers:
             print_menu_item("7", "System Information", Icons.INFO)
 
             print(f"\n{Colors.BOLD}⚙️  System:{Colors.END}")
-            print_menu_item("8", "Run Checkup", Icons.CHECK)
+            print_menu_item("8", "Restart", Icons.CHECK)
             print_menu_item("9", "Clean Temporary Files", Icons.DELETE)
 
             print(f"\n{Colors.BOLD}{Colors.RED}0.{Colors.END} {Icons.EXIT} Exit")
@@ -81,7 +81,8 @@ class MenuHandlers:
             if choice == 0:
                 print_success("Goodbye!")
 
-                print_section(f"{copyright_}")
+                print_section(f"{copyright_}\n\n"
+                              f"https://github.com/smartlegionlab/smart-repository-manager-cli")
 
                 break
             elif choice == 1:
