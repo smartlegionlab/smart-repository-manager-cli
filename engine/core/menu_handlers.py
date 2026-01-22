@@ -43,7 +43,7 @@ class MenuHandlers:
                 f"  • {Icons.REPO} Total repositories: {Colors.CYAN}{self.cli.ui_state.get('repositories_count', 0)}{Colors.END}")
             print(
                 f"  • {Icons.FOLDER} Local repositories: {Colors.CYAN}"
-                f"{self.cli.ui_state.get('local_repositories_count', 0)}{Colors.END}")
+                f"{self.cli.get_local_exist_repos_count()}{Colors.END}")
 
             if self.cli.ui_state.get('total_public', 0) > 0:
                 print(f"  • {Icons.LOCK} Public repositories: {self.cli.ui_state.get('total_public')}")
@@ -55,7 +55,7 @@ class MenuHandlers:
                 print(f"  • {Icons.STORAGE} Archived repositories: {self.cli.ui_state.get('total_archived')}")
 
             print(f"  • {Icons.SYNC} Needs update: {Colors.YELLOW}"
-                  f"{self.cli.ui_state.get('needs_update_count', 0)}{Colors.END}")
+                  f"{self.cli.get_need_update_repos_count()}{Colors.END}")
 
             print(f"\n{Colors.BOLD}🚀 Main Commands:{Colors.END}")
             print_menu_item("1", "User Information", Icons.USER)

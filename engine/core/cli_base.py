@@ -68,6 +68,15 @@ class SmartGitCLI:
     def get_need_update_repos(self):
         return [repo for repo in self.repositories if hasattr(repo, 'need_update') and repo.need_update]
 
+    def get_need_update_repos_count(self):
+        return len(self.get_need_update_repos())
+
+    def get_local_exist_repos(self):
+        return [repo for repo in self.repositories if repo.local_exists]
+
+    def get_local_exist_repos_count(self):
+        return len(self.get_local_exist_repos())
+
     def _signal_handler(self, signum, frame):
         _ = signum, frame
         print(f"\n\n{Colors.RED}Interrupt signal received. Exiting...{Colors.END}")
@@ -171,7 +180,6 @@ class SmartGitCLI:
 
     def _update_ui_state(self):
         self.ui_state.get_all_repositories(self.repositories)
-        self.ui_state.get_local_repositories(self.repositories, self.current_user.username)
         self.ui_state.get_private_public_repositories(self.repositories)
 
         self.ui_state.set('needs_update_count', self._calculate_needs_update_count())
