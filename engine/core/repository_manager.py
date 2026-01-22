@@ -268,17 +268,18 @@ class RepositoryManager:
             print_section(f"REPOSITORY: {repo.name}")
 
             print(f"\n{Colors.BOLD}📋 Basic Info:{Colors.END}")
-            print(f"  • Full Name: {repo.full_name}")
-            print(f"  • Description: {repo.description or 'No description'}")
-            print(f"  • {Icons.LOCK if repo.private else Icons.UNLOCK} Private: {'Yes' if repo.private else 'No'}")
-            print(f"  • {Icons.LANGUAGE} Language: {repo.language or 'Not specified'}")
-            print(f"  • {Icons.STAR} Stars: {repo.stargazers_count}")
-            print(f"  • {Icons.FORK} Forks: {repo.forks_count}")
-            print(f"  • {Icons.CALENDAR} Last Update: {repo.last_update}")
-            print(f"  • URL: {repo.html_url}")
+            print(f"  • {Colors.YELLOW}Full Name: {Colors.END}{repo.full_name}")
+            print(f"  • {Colors.YELLOW}Description: {Colors.END}{repo.description or 'No description'}")
+            print(f"  • {Icons.LOCK if repo.private else Icons.UNLOCK} {Colors.YELLOW}"
+                  f"Private: {Colors.END}{'Yes' if repo.private else 'No'}")
+            print(f"  • {Icons.LANGUAGE}{Colors.YELLOW}Language: {Colors.END}{repo.language or 'Not specified'}")
+            print(f"  • {Icons.STAR} {Colors.YELLOW}Stars: {Colors.END}{repo.stargazers_count}")
+            print(f"  • {Icons.FORK} {Colors.YELLOW}Forks: {Colors.END}{repo.forks_count}")
+            print(f"  • {Icons.CALENDAR} {Colors.YELLOW}Last Update: {Colors.END}{repo.last_update}")
+            print(f"  • {Colors.YELLOW}URL: {Colors.CYAN}{repo.html_url}")
 
             if repo.ssh_url:
-                print(f"\n{Colors.BOLD}🔐 SSH URL:{Colors.END}")
+                print(f"\n{Colors.YELLOW}🔐 SSH URL:{Colors.END}")
                 print(f"  • {repo.ssh_url}")
 
                 needs_update = False
@@ -289,9 +290,9 @@ class RepositoryManager:
                         repo
                     )
 
-                print(f"\n{Colors.BOLD}📊 Local Status:{Colors.END}")
-                print(f"  • Exists: {'✓' if repo.local_exists else '✗'}")
-                print(f"  • Status: {reason}")
+                print(f"\n{Colors.YELLOW}📊 Local Status:{Colors.END}")
+                print(f"  • {Colors.YELLOW}Exists: {Colors.END}{'✓' if repo.local_exists else '✗'}")
+                print(f"  • {Colors.YELLOW}Status: {Colors.END}{reason}")
 
                 if needs_update:
                     print(f"\n{Colors.YELLOW}{Icons.WARNING} This repository needs updating.{Colors.END}")
