@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional, Callable
 
 import requests
+from smart_repository_manager_core.utils.file_ops import FileOperations
 
 from engine.ui.result_logger import ResultLogger
 from engine.ui.state_manager import UIStateManager
@@ -50,6 +51,7 @@ class SmartGitCLI:
         self.sync_service = SyncService()
         self.ssh_service = SSHService()
         self.network_service = NetworkService()
+        self.file_operations = FileOperations()
 
         self.ui_state = UIStateManager()
         self.result_logger = ResultLogger()

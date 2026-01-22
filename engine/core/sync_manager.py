@@ -14,7 +14,6 @@ from engine.utils.decorator import (
 )
 from smart_repository_manager_core.utils.helpers import Helpers
 
-
 class SyncManager:
     def __init__(self, cli):
         self.cli = cli
@@ -64,10 +63,51 @@ class SyncManager:
         clear_screen()
         print_section("RE-CLONE ALL REPOSITORIES")
 
+        structure = self.cli.structure_service.get_user_structure(self.cli.current_user.username)
+        if "repositories" not in structure:
+            print_error("Storage structure not found")
+            return
+
         repo_list = self.cli.repositories
 
-        for repo in repo_list:
-            print(f"Repo: {repo.name}")
+        repos_path = structure['repositories']
+
+        print(f"\n{Colors.BOLD}Found {len(repo_list)} repositories:{Colors.END}")
+        for i, repo in enumerate(repo_list, 1):
+            print(f"  {i}. {repo.name}")
+
+        if not self.cli.ask_yes_no(f"\nRe-clone {len(repo_list)} repositories?"):
+            return
+
+        print_info(f"\nStarting re-clone of {len(repo_list)} repositories...")
+
+        stats = {
+            "cloned": 0,
+            "failed": 0,
+            "skipped": 0,
+            "durations": []
+        }
+
+        for i, repo in enumerate(repo_list, 1):
+            print(f"\n[{i}/{len(repo_list)}/{stats['failed']}] Re-clone: {repo.name}")
+            repo_path = repos_path / repo.name
+            self.cli.file_operations.safe_remove(repo_path)
+            success, message, duration = self.cli.sync_service.sync_single_repository(
+                self.cli.current_user,
+                repo,
+                "clone"
+            )
+
+            stats["durations"].append(duration)
+
+            if success:
+                print_success(f"{message} ({Helpers.format_duration(duration)})")
+                stats["cloned"] += 1
+            else:
+                print_error(f"Failed: {message}")
+                stats["failed"] += 1
+
+        self.cli._show_sync_summary(stats, "Cloning")
 
 
     def sync_all_repositories(self):
