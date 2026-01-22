@@ -115,7 +115,7 @@ class EnhancedSmartGitCLI(SmartGitCLI):
             self.step8_update_check()
 
             total_time = time.time() - start_time
-            print_section("CHECKUP COMPLETED")
+            print_section("CHECKUP COMPLETED!")
 
             summary = self.result_logger.get_summary()
             successful = summary["successful_steps"]

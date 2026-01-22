@@ -5,7 +5,7 @@ import getpass
 from pathlib import Path
 from datetime import datetime
 
-from engine.utils.decorator import Colors
+from engine.utils.decorator import Colors, print_warning
 from smart_repository_manager_core.core.models.ssh_models import SSHStatus
 from smart_repository_manager_core.services.config_service import ConfigService
 from smart_repository_manager_core.services.github_service import GitHubService
@@ -480,7 +480,7 @@ class StepHandlers:
                 data
             )
 
-            print(f"\n  {Colors.BOLD}Preparing content:{Colors.END}")
+            print_warning(f"{Colors.BOLD} Preparing content...{Colors.END}")
 
             self.cli._update_ui_state()
 

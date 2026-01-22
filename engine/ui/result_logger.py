@@ -20,10 +20,7 @@ class ResultLogger:
         }
         self.results.append(result)
 
-        color = Colors.GREEN if success else Colors.RED
-        symbol = Icons.SUCCESS if success else Icons.ERROR
-
-        print(f"  {color}{symbol}{Colors.END} {message}")
+        print_success(f"{message}")
 
         if data and success:
             for key, value in data.items():
