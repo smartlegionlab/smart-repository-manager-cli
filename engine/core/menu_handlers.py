@@ -1,4 +1,4 @@
-# Copyright (©) 2025, Alexander Suvorov. All rights reserved.
+# Copyright (©) 2026, Alexander Suvorov. All rights reserved.
 import shutil
 from datetime import datetime
 
@@ -18,6 +18,9 @@ from smart_repository_manager_core.services.github_service import GitHubService
 from smart_repository_manager_core.services.ssh_service import SSHService
 from smart_repository_manager_core.utils.helpers import Helpers
 
+from engine import __version__ as ver
+from engine import __copyright__ as copyright_
+
 
 class MenuHandlers:
     def __init__(self, cli):
@@ -28,7 +31,7 @@ class MenuHandlers:
 
         while self.cli.running:
             clear_screen()
-            print_section("Smart Repository Manager v0.1.2")
+            print_section(f"Smart Repository Manager {ver}")
 
             if not self.cli.current_user or not self.cli.repositories:
                 print_error("User or repositories not loaded.")
@@ -40,22 +43,22 @@ class MenuHandlers:
             print(f"  • {Icons.USER} User: {Colors.CYAN}{self.cli.current_user.username}{Colors.END}")
             print(f"\n{Colors.BOLD}📊 Repositories Status:{Colors.END}")
             print(
-                f"  • {Icons.REPO} Total repositories: {Colors.CYAN}{self.cli.ui_state.get('repositories_count', 0)}{Colors.END}")
+                f"  • {Icons.REPO} Total repositories: {Colors.CYAN}{len(self.cli.repositories)}{Colors.END}")
             print(
                 f"  • {Icons.FOLDER} Local repositories: {Colors.CYAN}"
-                f"{self.cli.ui_state.get('local_repositories_count', 0)}{Colors.END}")
+                f"{self.cli.get_local_exist_repos_count()}{Colors.END}")
 
             if self.cli.ui_state.get('total_public', 0) > 0:
-                print(f"  • {Icons.LOCK} Public repositories: {self.cli.ui_state.get('total_public')}")
+                print(f"  • {Icons.LOCK} Public repositories: {self.cli.get_public_repos_count()}")
 
             if self.cli.ui_state.get('total_private', 0) > 0:
-                print(f"  • {Icons.LOCK} Private repositories: {self.cli.ui_state.get('total_private')}")
+                print(f"  • {Icons.LOCK} Private repositories: {self.cli.get_private_repos_count()}")
 
             if self.cli.ui_state.get('total_archived', 0) > 0:
                 print(f"  • {Icons.STORAGE} Archived repositories: {self.cli.ui_state.get('total_archived')}")
 
             print(f"  • {Icons.SYNC} Needs update: {Colors.YELLOW}"
-                  f"{self.cli.ui_state.get('needs_update_count', 0)}{Colors.END}")
+                  f"{self.cli.get_need_update_repos_count()}{Colors.END}")
 
             print(f"\n{Colors.BOLD}🚀 Main Commands:{Colors.END}")
             print_menu_item("1", "User Information", Icons.USER)
@@ -67,8 +70,8 @@ class MenuHandlers:
             print_menu_item("7", "System Information", Icons.INFO)
 
             print(f"\n{Colors.BOLD}⚙️  System:{Colors.END}")
-            print_menu_item("8", "Run Checkup", Icons.CHECK)
-            print_menu_item("9", "Clean Temporary Files", Icons.DELETE)
+            print_menu_item("8", "Restart", Icons.CHECK)
+            print_menu_item("9", " Clean Temporary Files", Icons.DELETE)
 
             print(f"\n{Colors.BOLD}{Colors.RED}0.{Colors.END} {Icons.EXIT} Exit")
             print('=' * 60)
@@ -77,6 +80,9 @@ class MenuHandlers:
 
             if choice == 0:
                 print_success("Goodbye!")
+
+                print_section(f"{copyright_}")
+
                 break
             elif choice == 1:
                 self.show_user_info()

@@ -1,4 +1,4 @@
-# Copyright (©) 2025, Alexander Suvorov. All rights reserved.
+# Copyright (©) 2026, Alexander Suvorov. All rights reserved.
 import sys
 import time
 import traceback
@@ -115,20 +115,20 @@ class EnhancedSmartGitCLI(SmartGitCLI):
             self.step8_update_check()
 
             total_time = time.time() - start_time
-            print_section("CHECKUP COMPLETED")
+            print_section("CHECKUP COMPLETED!")
 
             summary = self.result_logger.get_summary()
             successful = summary["successful_steps"]
             total = summary["total_steps"]
 
-            print_info(f"Total time: {Helpers.format_duration(total_time)}")
-            print_info(f"Successful steps: {successful}/{total}")
+            print_info(f"{Colors.YELLOW}Total time: {Colors.END}{Helpers.format_duration(total_time)}")
+            print_info(f"{Colors.YELLOW}Successful steps: {Colors.END}{successful}/{total}")
 
             if self.current_user:
-                print_info(f"User: {self.current_user.username}")
+                print_info(f"{Colors.YELLOW}User: {Colors.END}{self.current_user.username}")
 
             if self.repositories:
-                print_info(f"Repositories: {len(self.repositories)}")
+                print_info(f"{Colors.YELLOW}Repositories: {Colors.END}{len(self.repositories)}\n")
 
             self.save_results()
             wait_for_enter()

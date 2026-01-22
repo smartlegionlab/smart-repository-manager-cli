@@ -1,4 +1,4 @@
-# Copyright (©) 2025, Alexander Suvorov. All rights reserved.
+# Copyright (©) 2026, Alexander Suvorov. All rights reserved.
 import json
 from datetime import datetime
 from pathlib import Path
@@ -20,10 +20,7 @@ class ResultLogger:
         }
         self.results.append(result)
 
-        color = Colors.GREEN if success else Colors.RED
-        symbol = Icons.SUCCESS if success else Icons.ERROR
-
-        print(f"  {color}{symbol}{Colors.END} {message}")
+        print_success(f"{message}")
 
         if data and success:
             for key, value in data.items():

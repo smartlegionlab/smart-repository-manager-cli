@@ -1,4 +1,4 @@
-# Copyright (©) 2025, Alexander Suvorov. All rights reserved.
+# Copyright (©) 2026, Alexander Suvorov. All rights reserved.
 import ipaddress
 import socket
 import sys
@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional, Callable
 
 import requests
+from smart_repository_manager_core.utils.file_ops import FileOperations
 
 from engine.ui.result_logger import ResultLogger
 from engine.ui.state_manager import UIStateManager
@@ -50,6 +51,7 @@ class SmartGitCLI:
         self.sync_service = SyncService()
         self.ssh_service = SSHService()
         self.network_service = NetworkService()
+        self.file_operations = FileOperations()
 
         self.ui_state = UIStateManager()
         self.result_logger = ResultLogger()
@@ -64,6 +66,30 @@ class SmartGitCLI:
         signal.signal(signal.SIGINT, self._signal_handler)
 
         self.print_header()
+
+    def get_need_update_repos(self):
+        return [repo for repo in self.repositories if hasattr(repo, 'need_update') and repo.need_update]
+
+    def get_need_update_repos_count(self):
+        return len(self.get_need_update_repos())
+
+    def get_local_exist_repos(self):
+        return [repo for repo in self.repositories if repo.local_exists]
+
+    def get_local_exist_repos_count(self):
+        return len(self.get_local_exist_repos())
+
+    def get_public_repos(self):
+        return [repo for repo in self.repositories if not repo.private]
+
+    def get_public_repos_count(self):
+        return len(self.get_public_repos())
+
+    def get_private_repos(self):
+        return [repo for repo in self.repositories if repo.private]
+
+    def get_private_repos_count(self):
+        return len(self.get_private_repos())
 
     def _signal_handler(self, signum, frame):
         _ = signum, frame
@@ -140,6 +166,8 @@ class SmartGitCLI:
                 repo
             )
 
+            repo.need_update = needs_update
+
             if needs_update:
                 needs_update_count += 1
 
@@ -153,7 +181,7 @@ class SmartGitCLI:
         print(f"\n{Colors.BOLD}📊 Results:{Colors.END}")
         for key, value in stats.items():
             if key != "durations" and isinstance(value, int):
-                icon = Icons.SUCCESS if value > 0 and key in ["cloned", "synced", "repaired"] else Icons.INFO
+                icon = Icons.SUCCESS if value > 0 and key in ["cloned", "synced", "repaired", "updated"] else Icons.INFO
                 print(f"  {icon} {key.replace('_', ' ').title()}: {value}")
 
         if stats["durations"]:
@@ -166,7 +194,6 @@ class SmartGitCLI:
 
     def _update_ui_state(self):
         self.ui_state.get_all_repositories(self.repositories)
-        self.ui_state.get_local_repositories(self.repositories, self.current_user.username)
         self.ui_state.get_private_public_repositories(self.repositories)
 
         self.ui_state.set('needs_update_count', self._calculate_needs_update_count())

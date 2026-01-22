@@ -1,4 +1,4 @@
-# Copyright (©) 2025, Alexander Suvorov. All rights reserved.
+# Copyright (©) 2026, Alexander Suvorov. All rights reserved.
 import subprocess
 
 from engine.utils.decorator import (
@@ -31,9 +31,10 @@ class RepositoryManager:
 
             print(f"\n{Colors.BOLD}📊 Repository Stats:{Colors.END}")
             print(f"  • Total repositories: {len(self.cli.repositories)}")
-            print(f"  • Local repositories: {self.cli.ui_state.get('local_repositories_count', 0)}")
-            print(f"  • Needs update: {self.cli.ui_state.get('needs_update_count', 0)}")
-            print(f"  • Private repositories: {self.cli.ui_state.get('total_private', 0)}")
+            print(f"  • Local repositories: {self.cli.get_local_exist_repos_count()}")
+            print(f"  • Needs update: {self.cli.get_need_update_repos_count()}")
+            print(f"  • Private repositories: {self.cli.get_private_repos_count()}")
+            print(f"  • Public repositories: {self.cli.get_public_repos_count()}")
             print(f"  • Archived repositories: {self.cli.ui_state.get('total_archived', 0)}")
             print(f"  • Forks: {self.cli.ui_state.get('total_forks', 0)}")
 
@@ -81,19 +82,18 @@ class RepositoryManager:
 
         for i, repo in enumerate(self.cli.repositories, 1):
             local_icon = Icons.SUCCESS if repo.local_exists else Icons.ERROR
-
             if repo.local_exists and self.cli.current_user:
-                needs_update = self.cli._get_repository_needs_update(repo)
+                needs_update = repo.need_update
                 update_icon = Icons.WARNING if needs_update else Icons.SUCCESS
             else:
-                update_icon = Icons.ERROR if not repo.local_exists else Icons.SUCCESS
+                update_icon = Icons.WARNING if not repo.need_update else Icons.SUCCESS
 
-            private_icon = Icons.LOCK if repo.private else Icons.UNLOCK
+            private_icon = Icons.LOCK if repo.private else Icons.NETWORK
             size_mb = repo.size / 1024 if repo.size else 0
 
             rows.append([
                 i,
-                repo.name[:25],
+                repo.name[:30],
                 local_icon,
                 update_icon,
                 private_icon,
@@ -130,20 +130,20 @@ class RepositoryManager:
         headers = ["Name", "Local", "Updates", "Language", "Description"]
         rows = []
 
-        for repo in found_repos[:20]:
+        for repo in found_repos:
             local_icon = Icons.SUCCESS if repo.local_exists else Icons.ERROR
 
             if repo.local_exists and self.cli.current_user:
-                needs_update = self.cli._get_repository_needs_update(repo)
+                needs_update = repo.need_update
                 update_icon = Icons.WARNING if needs_update else Icons.SUCCESS
             else:
-                update_icon = Icons.ERROR if not repo.local_exists else Icons.SUCCESS
+                update_icon = Icons.WARNING if not repo.need_update else Icons.SUCCESS
 
             description = repo.description[:40] + "..." if repo.description and len(repo.description) > 40 else (
                         repo.description or "-")
 
             rows.append([
-                repo.name[:30],
+                repo.name[:50],
                 local_icon,
                 update_icon,
                 repo.language or "-",
@@ -180,13 +180,13 @@ class RepositoryManager:
         headers = ["Language", "Count", "Percentage"]
         rows = []
 
-        for lang, count in sorted_languages[:15]:
+        for lang, count in sorted_languages:
             percentage = (count / total_repos) * 100
             rows.append([lang, count, f"{percentage:.1f}%"])
 
         print_table(headers, rows)
 
-        other_count = total_repos - sum(count for _, count in sorted_languages[:15])
+        other_count = total_repos - sum(count for _, count in sorted_languages)
         if other_count > 0:
             print_info(f"Other languages: {other_count} repositories")
 
@@ -211,7 +211,7 @@ class RepositoryManager:
         broken_count = 0
         missing_count = 0
 
-        for repo in self.cli.repositories[:20]:
+        for repo in self.cli.repositories:
             repo_path = repos_path / repo.name
 
             if not repo_path.exists():
@@ -236,7 +236,7 @@ class RepositoryManager:
             except:
                 broken_count += 1
 
-        print(f"\n{Colors.BOLD}Health Status (first 20):{Colors.END}")
+        print(f"\n{Colors.BOLD}Health Status:{Colors.END}")
         print(f"  • {Icons.SUCCESS} Healthy: {healthy_count}")
         print(f"  • {Icons.ERROR} Broken: {broken_count}")
         print(f"  • {Icons.WARNING} Missing: {missing_count}")
@@ -254,15 +254,14 @@ class RepositoryManager:
             return
 
         print("Available repositories:")
-        for i, repo in enumerate(self.cli.repositories[:20], 1):
+        for i, repo in enumerate(self.cli.repositories, 1):
             print(f"{i:2d}. {repo.name}")
 
-        if len(self.cli.repositories) > 20:
-            print(f"... and {len(self.cli.repositories) - 20} more")
-
         try:
-            choice = self.cli._get_menu_choice(f"\nSelect repository [1-{min(20, len(self.cli.repositories))}]", 1,
-                                               min(20, len(self.cli.repositories)))
+            choice = self.cli._get_menu_choice(f"\nSelect repository (0 for exit)", 0, len(self.cli.repositories))
+
+            if not choice:
+                return
 
             repo = self.cli.repositories[choice - 1]
 
@@ -270,17 +269,18 @@ class RepositoryManager:
             print_section(f"REPOSITORY: {repo.name}")
 
             print(f"\n{Colors.BOLD}📋 Basic Info:{Colors.END}")
-            print(f"  • Full Name: {repo.full_name}")
-            print(f"  • Description: {repo.description or 'No description'}")
-            print(f"  • {Icons.LOCK if repo.private else Icons.UNLOCK} Private: {'Yes' if repo.private else 'No'}")
-            print(f"  • {Icons.LANGUAGE} Language: {repo.language or 'Not specified'}")
-            print(f"  • {Icons.STAR} Stars: {repo.stargazers_count}")
-            print(f"  • {Icons.FORK} Forks: {repo.forks_count}")
-            print(f"  • {Icons.CALENDAR} Last Update: {repo.last_update}")
-            print(f"  • URL: {repo.html_url}")
+            print(f"  • {Colors.YELLOW}Full Name: {Colors.END}{repo.full_name}")
+            print(f"  • {Colors.YELLOW}Description: {Colors.END}{repo.description or 'No description'}")
+            print(f"  • {Icons.LOCK if repo.private else Icons.UNLOCK} {Colors.YELLOW}"
+                  f"Private: {Colors.END}{'Yes' if repo.private else 'No'}")
+            print(f"  • {Icons.LANGUAGE}{Colors.YELLOW}Language: {Colors.END}{repo.language or 'Not specified'}")
+            print(f"  • {Icons.STAR} {Colors.YELLOW}Stars: {Colors.END}{repo.stargazers_count}")
+            print(f"  • {Icons.FORK} {Colors.YELLOW}Forks: {Colors.END}{repo.forks_count}")
+            print(f"  • {Icons.CALENDAR} {Colors.YELLOW}Last Update: {Colors.END}{repo.last_update}")
+            print(f"  • {Colors.YELLOW}URL: {Colors.CYAN}{repo.html_url}")
 
             if repo.ssh_url:
-                print(f"\n{Colors.BOLD}🔐 SSH URL:{Colors.END}")
+                print(f"\n{Colors.YELLOW}🔐 SSH URL:{Colors.END}")
                 print(f"  • {repo.ssh_url}")
 
                 needs_update = False
@@ -291,9 +291,9 @@ class RepositoryManager:
                         repo
                     )
 
-                print(f"\n{Colors.BOLD}📊 Local Status:{Colors.END}")
-                print(f"  • Exists: {'✓' if repo.local_exists else '✗'}")
-                print(f"  • Status: {reason}")
+                print(f"\n{Colors.YELLOW}📊 Local Status:{Colors.END}")
+                print(f"  • {Colors.YELLOW}Exists: {Colors.END}{'✓' if repo.local_exists else '✗'}")
+                print(f"  • {Colors.YELLOW}Status: {Colors.END}{reason}")
 
                 if needs_update:
                     print(f"\n{Colors.YELLOW}{Icons.WARNING} This repository needs updating.{Colors.END}")

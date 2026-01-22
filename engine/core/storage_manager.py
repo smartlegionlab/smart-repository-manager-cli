@@ -1,4 +1,4 @@
-# Copyright (©) 2025, Alexander Suvorov. All rights reserved.
+# Copyright (©) 2026, Alexander Suvorov. All rights reserved.
 import shutil
 from typing import Dict, Any
 
@@ -44,7 +44,7 @@ class StorageManager:
 
             print(f"\n{Colors.BOLD}🗑️ Commands:{Colors.END}")
             print_menu_item("1", "Delete Repository", Icons.DELETE)
-            print_menu_item("2", "Clear All Storage", Icons.DELETE)
+            print_menu_item("2", "Delete All Repos", Icons.DELETE)
             print_menu_item("3", "Storage Information", Icons.INFO)
 
             print(f"\n{Colors.BOLD}{Colors.BLUE}0.{Colors.END} {Icons.BACK} Back")

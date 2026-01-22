@@ -1,4 +1,4 @@
-# Copyright (©) 2025, Alexander Suvorov. All rights reserved.
+# Copyright (©) 2026, Alexander Suvorov. All rights reserved.
 import subprocess
 
 from engine.utils.decorator import (
@@ -14,7 +14,6 @@ from engine.utils.decorator import (
 )
 from smart_repository_manager_core.utils.helpers import Helpers
 
-
 class SyncManager:
     def __init__(self, cli):
         self.cli = cli
@@ -28,19 +27,21 @@ class SyncManager:
             print_section("SYNCHRONIZATION")
 
             print(f"\n{Colors.BOLD}📊 Status:{Colors.END}")
-            print(f"  • Local repositories: {self.cli.ui_state.get('local_repositories_count', 0)}")
-            print(f"  • Needs update: {self.cli.ui_state.get('needs_update_count', 0)}")
+            print(f"  • Total repositories: {self.cli.ui_state.get('repositories_count', 0)}")
+            print(f"  • Local repositories: {self.cli.get_local_exist_repos_count()}")
+            print(f"  • Needs update: {self.cli.get_need_update_repos_count()}")
 
-            print(f"\n{Colors.BOLD}🔄 Commands:{Colors.END}")
+            print(f"\n{Colors.BOLD}🔄Commands:{Colors.END}")
             print_menu_item("1", "Synchronize All", Icons.SYNC)
             print_menu_item("2", "Update Needed Only", Icons.SYNC)
             print_menu_item("3", "Clone Missing Only", Icons.DOWNLOAD)
             print_menu_item("4", "Sync with Repair", Icons.SETTINGS)
+            print_menu_item("5", "Re-clone All", Icons.SETTINGS)
 
             print(f"\n{Colors.BOLD}{Colors.BLUE}0.{Colors.END} {Icons.BACK} Back")
             print('=' * 60)
 
-            choice = self.cli._get_menu_choice("Select option", 0, 4)
+            choice = self.cli._get_menu_choice("Select option", 0, 5)
 
             if choice == 0:
                 self.cli.current_menu = self.cli.menu_stack.pop()
@@ -52,12 +53,121 @@ class SyncManager:
                 self.sync_missing_repositories()
             elif choice == 4:
                 self.sync_with_repair()
+            elif choice == 5:
+                self.reclone_all_repos()
 
             if choice != 0:
                 wait_for_enter()
 
+    def reclone_all_repos(self):
+        clear_screen()
+        print_section("RE-CLONE ALL REPOSITORIES")
+
+        structure = self.cli.structure_service.get_user_structure(self.cli.current_user.username)
+        if "repositories" not in structure:
+            print_error("Storage structure not found")
+            return
+
+        repo_list = self.cli.repositories
+
+        repos_path = structure['repositories']
+
+        print(f"\n{Colors.BOLD}Found {len(repo_list)} repositories:{Colors.END}")
+        for i, repo in enumerate(repo_list, 1):
+            print(f"  {i}. {repo.name}")
+
+        if not self.cli.ask_yes_no(f"\nRe-clone {len(repo_list)} repositories?"):
+            return
+
+        print_info(f"\nStarting re-clone of {len(repo_list)} repositories...")
+
+        stats = {
+            "cloned": 0,
+            "failed": 0,
+            "skipped": 0,
+            "durations": []
+        }
+
+        for i, repo in enumerate(repo_list, 1):
+            print(f"\n[{i}/{len(repo_list)}/{stats['failed']}] Re-clone: {repo.name}")
+            repo_path = repos_path / repo.name
+            self.cli.file_operations.safe_remove(repo_path)
+            success, message, duration = self.cli.sync_service.sync_single_repository(
+                self.cli.current_user,
+                repo,
+                "clone"
+            )
+
+            stats["durations"].append(duration)
+
+            if success:
+                print_success(f"{message} ({Helpers.format_duration(duration)})")
+                stats["cloned"] += 1
+            else:
+                print_error(f"Failed: {message}")
+                stats["failed"] += 1
+
+        self.cli._show_sync_summary(stats, "Cloning")
+
+
     def sync_all_repositories(self):
-        self.sync_missing_repositories()
+        clear_screen()
+        print_section("SYNC ALL REPOSITORIES")
+
+        structure = self.cli.structure_service.get_user_structure(self.cli.current_user.username)
+        if "repositories" not in structure:
+            print_error("Storage structure not found")
+            return
+
+        repo_list = self.cli.repositories
+
+        print(f"\n{Colors.BOLD}Found {len(repo_list)} repositories:{Colors.END}")
+        for i, repo in enumerate(repo_list, 1):
+            print(f"  {i}. {repo.name}")
+
+        if not self.cli.ask_yes_no(f"\nSync {len(repo_list)} repositories?"):
+            return
+
+        print_info(f"\nStarting sync of {len(repo_list)} repositories...")
+
+        stats = {
+            "cloned": 0,
+            "failed": 0,
+            "skipped": 0,
+            "durations": []
+        }
+
+        for i, repo in enumerate(repo_list, 1):
+            print(f"\n[{i}/{len(repo_list)}/{stats['failed']}] Sync: {repo.name}")
+
+            if repo.local_exists:
+                success, message, duration = self.cli.sync_service.sync_single_repository(
+                    self.cli.current_user,
+                    repo,
+                    "pull"
+                )
+            else:
+                success, message, duration = self.cli.sync_service.sync_single_repository(
+                    self.cli.current_user,
+                    repo,
+                    "clone"
+                )
+
+            stats["durations"].append(duration)
+
+            if success:
+                if message == 'Already up to date':
+                    print_info(f"{message} ({Helpers.format_duration(duration)})")
+                    stats["skipped"] += 1
+                else:
+                    print_success(f"{message} ({Helpers.format_duration(duration)})")
+                    stats["cloned"] += 1
+            else:
+                print_error(f"Failed: {message}")
+                stats["failed"] += 1
+
+        self.cli._show_sync_summary(stats, "Cloning")
+
 
     def update_needed_repositories(self):
         clear_screen()
@@ -67,7 +177,50 @@ class SyncManager:
             print_error("User or repositories not loaded")
             return
 
-        self.sync_missing_repositories()
+        repo_list = self.cli.get_need_update_repos()
+
+        if not repo_list:
+            print('All repositories are up to date...')
+            return
+
+        structure = self.cli.structure_service.get_user_structure(self.cli.current_user.username)
+        if "repositories" not in structure:
+            print_error("Storage structure not found")
+            return
+
+        print(f"\n{Colors.BOLD}Found {len(repo_list)} repositories:{Colors.END}")
+        for i, repo in enumerate(repo_list, 1):
+            print(f"  {i}. {repo.name}")
+
+        if not self.cli.ask_yes_no(f"\nUpdate {len(repo_list)} repositories?"):
+            return
+
+        stats = {
+            "updated": 0,
+            "failed": 0,
+            "durations": []
+        }
+
+        for i, repo in enumerate(repo_list, 1):
+            print(f"\n[{i}/{len(repo_list)}/{stats['failed']}] Sync: {repo.name}")
+
+            success, message, duration = self.cli.sync_service.sync_single_repository(
+                self.cli.current_user,
+                repo,
+                "pull"
+            )
+
+            stats["durations"].append(duration)
+
+            if success:
+                print_success(f"{message} ({Helpers.format_duration(duration)})")
+                stats["updated"] += 1
+            else:
+                print_error(f"Failed: {message}")
+                stats["failed"] += 1
+
+        self.cli._show_sync_summary(stats, "Updating")
+
 
     def sync_missing_repositories(self):
         clear_screen()
@@ -98,11 +251,8 @@ class SyncManager:
             return
 
         print(f"\n{Colors.BOLD}Found {len(missing_repos)} missing repositories:{Colors.END}")
-        for i, repo in enumerate(missing_repos[:10], 1):
+        for i, repo in enumerate(missing_repos, 1):
             print(f"  {i}. {repo.name}")
-
-        if len(missing_repos) > 10:
-            print(f"  ... and {len(missing_repos) - 10} more")
 
         if not self.cli.ask_yes_no(f"\nClone {len(missing_repos)} missing repositories?"):
             return
@@ -112,7 +262,6 @@ class SyncManager:
         stats = {
             "cloned": 0,
             "failed": 0,
-            "skipped": 0,
             "durations": []
         }
 
@@ -183,11 +332,8 @@ class SyncManager:
 
         if broken_repos:
             print(f"\n{Colors.BOLD}Found {len(broken_repos)} broken repositories:{Colors.END}")
-            for i, repo in enumerate(broken_repos[:5], 1):
+            for i, repo in enumerate(broken_repos, 1):
                 print(f"  {i}. {repo.name}")
-
-            if len(broken_repos) > 5:
-                print(f"  ... and {len(broken_repos) - 5} more")
 
         print_info(f"\nStarting repair sync for {len(self.cli.repositories)} repositories...")
 
@@ -216,10 +362,17 @@ class SyncManager:
 
             if success:
                 if "repaired" in message.lower() or "re-cloned" in message.lower():
+                    if message == 'Already up to date':
+                        print_info(f"Repaired: ({Helpers.format_duration(duration)})")
+                        stats['skipped'] += 1
                     print_success(f"Repaired: {message} ({Helpers.format_duration(duration)})")
                     stats["repaired"] += 1
                 else:
-                    print_success(f"Synced: {message} ({Helpers.format_duration(duration)})")
+                    if message == 'Already up to date':
+                        print_info(f"Synced: ({Helpers.format_duration(duration)})")
+                        stats['skipped'] += 1
+                    else:
+                        print_success(f"Synced: {message} ({Helpers.format_duration(duration)})")
                     stats["synced"] += 1
             else:
                 print_error(f"Failed: {message}")
