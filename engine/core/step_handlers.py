@@ -5,7 +5,7 @@ import getpass
 from pathlib import Path
 from datetime import datetime
 
-from engine.utils.decorator import Colors, print_warning
+from engine.utils.decorator import Colors, print_warning, print_info
 from smart_repository_manager_core.core.models.ssh_models import SSHStatus
 from smart_repository_manager_core.services.config_service import ConfigService
 from smart_repository_manager_core.services.github_service import GitHubService
@@ -234,13 +234,13 @@ class StepHandlers:
             print(f"\n  {Colors.BOLD}Current configuration:{Colors.END}")
             print(f"    App: {config.app_name} v{config.version}")
             print(f"    Users: {len(config.users)}")
-            print(f"    Active user: {config.active_user or 'Not selected'}")
+            print(f"    Active user: {Colors.GREEN}{config.active_user or 'Not selected'}{Colors.END}")
 
             if config.users:
                 print(f"\n  {Colors.BOLD}Saved Users:{Colors.END}")
 
                 for i, username in enumerate(config.users.keys(), 1):
-                    marker = " ➤ " if username == config.active_user else "   "
+                    marker = f"{Colors.GREEN} ➤ {Colors.END}" if username == config.active_user else "   "
                     print(f"    {i}.{marker}{username}")
 
                 print(f"\n    {len(config.users) + 1}. Add new user")
@@ -423,7 +423,6 @@ class StepHandlers:
             limits_data = {
                 "limit": limits.get("limit", "Unknown"),
                 "remaining": limits.get("remaining", "Unknown"),
-                "reset_timestamp": limits.get("reset", "Unknown")
             }
 
             if limits.get("reset"):
@@ -558,6 +557,7 @@ class StepHandlers:
 
     def step8_update_check(self) -> bool:
         self.cli.log_step(8, "Checking for updates needed")
+        print_info('Please be patient...')
 
         if not self.cli.current_user or not self.cli.repositories:
             return self.cli.log_result(False, "No data to check updates")
