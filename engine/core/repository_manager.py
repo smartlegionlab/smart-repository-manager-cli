@@ -211,7 +211,7 @@ class RepositoryManager:
         broken_count = 0
         missing_count = 0
 
-        for repo in self.cli.repositories[:20]:
+        for repo in self.cli.repositories:
             repo_path = repos_path / repo.name
 
             if not repo_path.exists():
