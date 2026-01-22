@@ -1,6 +1,5 @@
 # Copyright (©) 2025, Alexander Suvorov. All rights reserved.
 import subprocess
-import time
 
 from engine.utils.decorator import (
     Colors,
@@ -207,7 +206,6 @@ class SyncManager:
 
             print(f"\n[{i}/{len(self.cli.repositories)}] Processing: {repo.name}")
 
-            start_time = time.time()
             success, message, duration = self.cli.sync_service.sync_single_repository(
                 self.cli.current_user,
                 repo,

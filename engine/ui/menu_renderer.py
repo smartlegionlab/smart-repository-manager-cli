@@ -6,7 +6,7 @@ class MenuRenderer:
     @staticmethod
     def render_main_menu(ui_state: dict):
         clear_screen()
-        print_section("Smart Repository Manager v0.1.1")
+        print_section("Smart Repository Manager v0.1.2")
 
         print(f"\n{Colors.BOLD}📊 System Status:{Colors.END}")
         if ui_state.get('current_user'):
