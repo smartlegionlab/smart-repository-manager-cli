@@ -156,8 +156,12 @@ class SyncManager:
             stats["durations"].append(duration)
 
             if success:
-                print_success(f"{message} ({Helpers.format_duration(duration)})")
-                stats["cloned"] += 1
+                if message == 'Already up to date':
+                    print_info(f"{message} ({Helpers.format_duration(duration)})")
+                    stats["skipped"] += 1
+                else:
+                    print_success(f"{message} ({Helpers.format_duration(duration)})")
+                    stats["cloned"] += 1
             else:
                 print_error(f"Failed: {message}")
                 stats["failed"] += 1
@@ -194,7 +198,6 @@ class SyncManager:
         stats = {
             "updated": 0,
             "failed": 0,
-            "skipped": 0,
             "durations": []
         }
 
@@ -259,7 +262,6 @@ class SyncManager:
         stats = {
             "cloned": 0,
             "failed": 0,
-            "skipped": 0,
             "durations": []
         }
 
@@ -360,10 +362,17 @@ class SyncManager:
 
             if success:
                 if "repaired" in message.lower() or "re-cloned" in message.lower():
+                    if message == 'Already up to date':
+                        print_info(f"Repaired: ({Helpers.format_duration(duration)})")
+                        stats['skipped'] += 1
                     print_success(f"Repaired: {message} ({Helpers.format_duration(duration)})")
                     stats["repaired"] += 1
                 else:
-                    print_success(f"Synced: {message} ({Helpers.format_duration(duration)})")
+                    if message == 'Already up to date':
+                        print_info(f"Synced: ({Helpers.format_duration(duration)})")
+                        stats['skipped'] += 1
+                    else:
+                        print_success(f"Synced: {message} ({Helpers.format_duration(duration)})")
                     stats["synced"] += 1
             else:
                 print_error(f"Failed: {message}")
