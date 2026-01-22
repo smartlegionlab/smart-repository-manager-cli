@@ -81,8 +81,7 @@ class MenuHandlers:
             if choice == 0:
                 print_success("Goodbye!")
 
-                print_section(f"{copyright_}\n\n"
-                              f"https://github.com/smartlegionlab/smart-repository-manager-cli")
+                print_section(f"{copyright_}")
 
                 break
             elif choice == 1:

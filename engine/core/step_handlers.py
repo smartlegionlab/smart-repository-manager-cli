@@ -23,7 +23,17 @@ class StepHandlers:
 
         try:
             config_service = ConfigService(self.cli.config_path)
+
             config = config_service.load_config()
+
+            config.set_version(ver)
+
+            config.update_last_launch()
+
+            config_service.save_config()
+
+            config = config_service.load_config()
+
 
             self.cli.log_result(
                 True,

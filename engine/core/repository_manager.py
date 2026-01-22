@@ -81,10 +81,9 @@ class RepositoryManager:
 
         for i, repo in enumerate(self.cli.repositories, 1):
             local_icon = Icons.SUCCESS if repo.local_exists else Icons.ERROR
-
             if repo.local_exists and self.cli.current_user:
                 needs_update = repo.need_update
-                update_icon = Icons.WARNING if not needs_update else Icons.SUCCESS
+                update_icon = Icons.WARNING if needs_update else Icons.SUCCESS
             else:
                 update_icon = Icons.WARNING if not repo.need_update else Icons.SUCCESS
 
