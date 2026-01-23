@@ -25,6 +25,7 @@ class SSHManager:
         while self.cli.current_menu == "ssh":
             clear_screen()
             print_section("SSH CONFIGURATION")
+            print_info(" Please wait...")
 
             ssh = SSHService()
             validation = ssh.validate_ssh_configuration()
@@ -53,7 +54,7 @@ class SSHManager:
             print_menu_item("7", "Test Connection", Icons.NETWORK)
             print_menu_item("8", "Detailed Information", Icons.INFO)
 
-            print(f"\n{Colors.BOLD}{Colors.BLUE}0.{Colors.END} {Icons.BACK} Back")
+            print(f"\n{Colors.BOLD}{Colors.BLUE}0.{Colors.END} {Icons.BACK}  Back")
             print('=' * 60)
 
             choice = self.cli._get_menu_choice("Select option", 0, 8)
@@ -83,6 +84,8 @@ class SSHManager:
     def show_ssh_info(self):
         clear_screen()
         print_section("SSH INFORMATION")
+
+        print_info(" Please wait...")
 
         try:
             ssh = SSHService()
@@ -204,6 +207,8 @@ class SSHManager:
         clear_screen()
         print_section("SHOW PUBLIC SSH KEYS")
 
+        print_info(" Please wait...")
+
         ssh = SSHService()
         keys = ssh.get_public_keys()
 
@@ -287,6 +292,8 @@ class SSHManager:
     def ssh_detailed_info(self):
         clear_screen()
         print_section("DETAILED SSH INFORMATION")
+
+        print_info(" Please wait...")
 
         try:
             ssh = SSHService()

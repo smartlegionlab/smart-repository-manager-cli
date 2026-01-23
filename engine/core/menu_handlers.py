@@ -49,7 +49,7 @@ class MenuHandlers:
                 f"{self.cli.get_local_exist_repos_count()}{Colors.END}")
 
             if self.cli.ui_state.get('total_public', 0) > 0:
-                print(f"  • {Icons.LOCK} Public repositories: {self.cli.get_public_repos_count()}")
+                print(f"  • {Icons.NETWORK} Public repositories: {self.cli.get_public_repos_count()}")
 
             if self.cli.ui_state.get('total_private', 0) > 0:
                 print(f"  • {Icons.LOCK} Private repositories: {self.cli.get_private_repos_count()}")
@@ -100,7 +100,7 @@ class MenuHandlers:
                 self.show_system_info()
             elif choice == 8:
                 self.cli.run_full_checkup()
-                continue
+                break
             elif choice == 9:
                 self.clean_temp_files()
 

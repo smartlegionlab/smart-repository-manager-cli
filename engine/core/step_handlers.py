@@ -2,16 +2,18 @@
 import shutil
 import sys
 import getpass
+import time
 from pathlib import Path
 from datetime import datetime
 
-from engine.utils.decorator import Colors, print_warning, print_info
+from engine.utils.decorator import Colors, print_warning, print_info, print_menu_item, print_success, print_section
 from smart_repository_manager_core.core.models.ssh_models import SSHStatus
 from smart_repository_manager_core.services.config_service import ConfigService
 from smart_repository_manager_core.services.github_service import GitHubService
 from smart_repository_manager_core.services.ssh_service import SSHService
 
 from engine import __version__ as ver
+from engine import __copyright__ as copyright_
 
 
 class StepHandlers:
@@ -19,6 +21,7 @@ class StepHandlers:
         self.cli = cli
 
     def step1_structure(self) -> bool:
+        time.sleep(1.0)
         self.cli.log_step(1, "Checking directory structure")
 
         try:
@@ -231,61 +234,68 @@ class StepHandlers:
             config_service = ConfigService(self.cli.config_path)
             config = config_service.load_config()
 
-            print(f"\n  {Colors.BOLD}Current configuration:{Colors.END}")
-            print(f"    App: {config.app_name} v{config.version}")
-            print(f"    Users: {len(config.users)}")
-            print(f"    Active user: {Colors.GREEN}{config.active_user or 'Not selected'}{Colors.END}")
+            while True:
 
-            if config.users:
-                print(f"\n  {Colors.BOLD}Saved Users:{Colors.END}")
+                print(f"\n  {Colors.BOLD}Current configuration:{Colors.END}")
+                print(f"    App: {config.app_name} v{config.version}")
+                print(f"    Users: {len(config.users)}")
+                print(f"    Active user: {Colors.GREEN}{config.active_user or 'Not selected'}{Colors.END}")
 
-                for i, username in enumerate(config.users.keys(), 1):
-                    marker = f"{Colors.GREEN} ➤ {Colors.END}" if username == config.active_user else "   "
-                    print(f"    {i}.{marker}{username}")
+                if config.users:
+                    print(f"\n  {Colors.BOLD}Saved Users:{Colors.END}")
 
-                print(f"\n    {len(config.users) + 1}. Add new user")
-                print(f"    {len(config.users) + 2}. Delete user")
-                print(f"    {len(config.users) + 3}. Continue without changes")
-                print(f"    {len(config.users) + 4}. Exit")
+                    for i, username in enumerate(config.users.keys(), 1):
+                        marker = f"{Colors.GREEN} ➤ {Colors.END}" if username == config.active_user else "   "
+                        print_menu_item(f"{i}", f"{marker}{username}")
 
-                choice = self.cli._get_menu_choice("Select action", 1, len(config.users) + 4)
+                    print_menu_item(f"\n    {len(config.users) + 1}", "Add new user")
+                    print_menu_item(f"  {len(config.users) + 2}", "Delete user")
+                    print_menu_item(f"  {len(config.users) + 3}", "Continue without changes")
+                    print_menu_item(f"  {len(config.users) + 4}", "Exit")
 
-                if choice <= len(config.users):
-                    username = list(config.users.keys())[choice - 1]
-                    config_service.set_active_user(username)
-                    self.cli.current_token = config.users[username]
+                    choice = self.cli._get_menu_choice("Select action", 1, len(config.users) + 4)
 
-                    success = self.cli.log_result(
-                        True,
-                        f"User selected: {username}",
-                        {"username": username, "action": "selected_existing"}
-                    )
+                    if choice <= len(config.users):
+                        username = list(config.users.keys())[choice - 1]
+                        config_service.set_active_user(username)
+                        self.cli.current_token = config.users[username]
 
-                elif choice == len(config.users) + 1:
-                    return self.add_new_user_step(config_service)
-
-                elif choice == len(config.users) + 2:
-                    return self.delete_user_step(config_service, config)
-                elif choice == len(config.users) + 4:
-                    sys.exit(1)
-
-                else:
-                    if config.active_user:
-                        self.cli.current_token = config.users[config.active_user]
                         success = self.cli.log_result(
                             True,
-                            f"Using current user: {config.active_user}",
-                            {"username": config.active_user}
+                            f"User selected: {username}",
+                            {"username": username, "action": "selected_existing"}
                         )
-                    else:
-                        print(f"\n  {Colors.RED}❌ No active user selected{Colors.END}")
+
+                    elif choice == len(config.users) + 1:
                         return self.add_new_user_step(config_service)
 
-            else:
-                print(f"\n  {Colors.YELLOW}⚠️ No saved users{Colors.END}")
-                return self.add_new_user_step(config_service)
+                    elif choice == len(config.users) + 2:
+                        self.delete_user_step(config_service, config)
+                        continue
+                    elif choice == len(config.users) + 4:
+                        print_success("Goodbye!")
 
-            return success
+                        print_section(f"{copyright_}")
+
+                        sys.exit(1)
+
+                    else:
+                        if config.active_user:
+                            self.cli.current_token = config.users[config.active_user]
+                            success = self.cli.log_result(
+                                True,
+                                f"Using current user: {config.active_user}",
+                                {"username": config.active_user}
+                            )
+                        else:
+                            print(f"\n  {Colors.RED}❌ No active user selected{Colors.END}")
+                            return self.add_new_user_step(config_service)
+
+                else:
+                    print(f"\n  {Colors.YELLOW}⚠️ No saved users{Colors.END}")
+                    return self.add_new_user_step(config_service)
+
+                return success
 
         except Exception as e:
             return self.cli.log_result(False, f"User management error: {str(e)}")

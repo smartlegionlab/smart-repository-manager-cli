@@ -138,7 +138,7 @@ class StorageManager:
 
         repo_name = local_repos[choice - 1].name
 
-        if not self.cli.ask_yes_no(f"Delete repository '{repo_name}'? This cannot be undone!"):
+        if not self.cli.ask_yes_no(f"{Colors.RED}Delete repository '{repo_name}'? This cannot be undone!{Colors.END}"):
             print_info("Deletion cancelled")
             return
 
@@ -152,6 +152,7 @@ class StorageManager:
                 for repo in self.cli.repositories:
                     if repo.name == repo_name:
                         repo.local_exists = False
+                        repo.need_update = True
                         break
             else:
                 print_error(f"Repository '{repo_name}' not found")
@@ -180,7 +181,7 @@ class StorageManager:
         print_warning(f"    • Size: {size_mb:.2f} MB")
         print_warning("    • This action cannot be undone!")
 
-        confirm = input(f"\n{Colors.RED}Type 'DELETE-ALL' to confirm: {Colors.END}").strip()
+        confirm = input(f"\n{Colors.RED}Type 'DELETE-ALL' to confirm (Press Enter to exit): {Colors.END}").strip()
         if confirm != 'DELETE-ALL':
             print_info("Deletion cancelled")
             return
@@ -204,6 +205,7 @@ class StorageManager:
 
                 for repo in self.cli.repositories:
                     repo.local_exists = False
+                    repo.need_update = True
 
             except Exception as e:
                 print_error(f"Error deleting repositories: {e}")

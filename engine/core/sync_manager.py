@@ -31,7 +31,7 @@ class SyncManager:
             print(f"  • Local repositories: {self.cli.get_local_exist_repos_count()}")
             print(f"  • Needs update: {self.cli.get_need_update_repos_count()}")
 
-            print(f"\n{Colors.BOLD}🔄Commands:{Colors.END}")
+            print(f"\n{Colors.BOLD}🔄 Commands:{Colors.END}")
             print_menu_item("1", "Synchronize All", Icons.SYNC)
             print_menu_item("2", "Update Needed Only", Icons.SYNC)
             print_menu_item("3", "Clone Missing Only", Icons.DOWNLOAD)
@@ -339,7 +339,6 @@ class SyncManager:
 
         stats = {
             "synced": 0,
-            "repaired": 0,
             "failed": 0,
             "skipped": 0,
             "durations": []
@@ -363,10 +362,9 @@ class SyncManager:
             if success:
                 if "repaired" in message.lower() or "re-cloned" in message.lower():
                     if message == 'Already up to date':
-                        print_info(f"Repaired: ({Helpers.format_duration(duration)})")
+                        print_info(f"{message}: ({Helpers.format_duration(duration)})")
                         stats['skipped'] += 1
                     print_success(f"Repaired: {message} ({Helpers.format_duration(duration)})")
-                    stats["repaired"] += 1
                 else:
                     if message == 'Already up to date':
                         print_info(f"Synced: ({Helpers.format_duration(duration)})")
