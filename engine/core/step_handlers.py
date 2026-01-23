@@ -2,16 +2,18 @@
 import shutil
 import sys
 import getpass
+import time
 from pathlib import Path
 from datetime import datetime
 
-from engine.utils.decorator import Colors, print_warning, print_info, print_menu_item
+from engine.utils.decorator import Colors, print_warning, print_info, print_menu_item, print_success, print_section
 from smart_repository_manager_core.core.models.ssh_models import SSHStatus
 from smart_repository_manager_core.services.config_service import ConfigService
 from smart_repository_manager_core.services.github_service import GitHubService
 from smart_repository_manager_core.services.ssh_service import SSHService
 
 from engine import __version__ as ver
+from engine import __copyright__ as copyright_
 
 
 class StepHandlers:
@@ -19,6 +21,7 @@ class StepHandlers:
         self.cli = cli
 
     def step1_structure(self) -> bool:
+        time.sleep(1.0)
         self.cli.log_step(1, "Checking directory structure")
 
         try:
@@ -270,6 +273,10 @@ class StepHandlers:
                         self.delete_user_step(config_service, config)
                         continue
                     elif choice == len(config.users) + 4:
+                        print_success("Goodbye!")
+
+                        print_section(f"{copyright_}")
+
                         sys.exit(1)
 
                     else:
