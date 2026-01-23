@@ -152,9 +152,6 @@ class RepositoryManager:
 
         print_table(headers, rows)
 
-        if len(found_repos) > 20:
-            print_info(f"... and {len(found_repos) - 20} more repositories")
-
     def show_language_stats(self):
         clear_screen()
         print_section("LANGUAGE STATISTICS")
