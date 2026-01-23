@@ -5,7 +5,7 @@ import getpass
 from pathlib import Path
 from datetime import datetime
 
-from engine.utils.decorator import Colors, print_warning, print_info
+from engine.utils.decorator import Colors, print_warning, print_info, print_menu_item
 from smart_repository_manager_core.core.models.ssh_models import SSHStatus
 from smart_repository_manager_core.services.config_service import ConfigService
 from smart_repository_manager_core.services.github_service import GitHubService
@@ -243,12 +243,12 @@ class StepHandlers:
 
                     for i, username in enumerate(config.users.keys(), 1):
                         marker = f"{Colors.GREEN} ➤ {Colors.END}" if username == config.active_user else "   "
-                        print(f"    {i}.{marker}{username}")
+                        print_menu_item(f"{i}", f"{marker}{username}")
 
-                    print(f"\n    {len(config.users) + 1}. Add new user")
-                    print(f"    {len(config.users) + 2}. Delete user")
-                    print(f"    {len(config.users) + 3}. Continue without changes")
-                    print(f"    {len(config.users) + 4}. Exit")
+                    print_menu_item(f"\n    {len(config.users) + 1}", "Add new user")
+                    print_menu_item(f"  {len(config.users) + 2}", "Delete user")
+                    print_menu_item(f"  {len(config.users) + 3}", "Continue without changes")
+                    print_menu_item(f"  {len(config.users) + 4}", "Exit")
 
                     choice = self.cli._get_menu_choice("Select action", 1, len(config.users) + 4)
 
