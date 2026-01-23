@@ -138,7 +138,7 @@ class StorageManager:
 
         repo_name = local_repos[choice - 1].name
 
-        if not self.cli.ask_yes_no(f"Delete repository '{repo_name}'? This cannot be undone!"):
+        if not self.cli.ask_yes_no(f"{Colors.RED}Delete repository '{repo_name}'? This cannot be undone!{Colors.END}"):
             print_info("Deletion cancelled")
             return
 
