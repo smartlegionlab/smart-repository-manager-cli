@@ -55,8 +55,8 @@ class ResultLogger:
         self.results.clear()
 
     def get_summary(self) -> Dict[str, Any]:
-        successful = sum(1 for r in self.results if r["success"])
-        total = len(self.results)
+        successful = sum(1 for r in self.results if r["success"]) // 2
+        total = len(self.results) // 2
 
         return {
             "total_steps": total,
