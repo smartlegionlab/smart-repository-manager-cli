@@ -181,7 +181,7 @@ class StorageManager:
         print_warning(f"    • Size: {size_mb:.2f} MB")
         print_warning("    • This action cannot be undone!")
 
-        confirm = input(f"\n{Colors.RED}Type 'DELETE-ALL' to confirm: {Colors.END}").strip()
+        confirm = input(f"\n{Colors.RED}Type 'DELETE-ALL' to confirm (Press Enter to exit): {Colors.END}").strip()
         if confirm != 'DELETE-ALL':
             print_info("Deletion cancelled")
             return
