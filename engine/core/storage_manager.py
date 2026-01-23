@@ -152,6 +152,7 @@ class StorageManager:
                 for repo in self.cli.repositories:
                     if repo.name == repo_name:
                         repo.local_exists = False
+                        repo.need_update = True
                         break
             else:
                 print_error(f"Repository '{repo_name}' not found")
@@ -204,6 +205,7 @@ class StorageManager:
 
                 for repo in self.cli.repositories:
                     repo.local_exists = False
+                    repo.need_update = True
 
             except Exception as e:
                 print_error(f"Error deleting repositories: {e}")
