@@ -1,5 +1,4 @@
 # Copyright (©) 2026, Alexander Suvorov. All rights reserved.
-import sys
 import time
 import traceback
 
@@ -10,13 +9,16 @@ from engine.core.ssh_manager import SSHManager
 from engine.core.step_handlers import StepHandlers
 from engine.core.storage_manager import StorageManager
 from engine.core.sync_manager import SyncManager
-from engine.utils.decorator import Colors, print_error, print_warning, print_info, wait_for_enter, print_section
+from engine.utils.text_decorator import (
+    Colors,
+    print_error,
+    print_warning,
+    print_info,
+    wait_for_enter,
+    print_section
+)
 
-try:
-    from smart_repository_manager_core.utils.helpers import Helpers
-except ImportError as e:
-    print(f"Error importing core modules: {e}")
-    sys.exit(1)
+from smart_repository_manager_core.utils.helpers import Helpers
 
 
 class EnhancedSmartGitCLI(SmartGitCLI):
@@ -68,14 +70,14 @@ class EnhancedSmartGitCLI(SmartGitCLI):
         self.delete_all_repositories = self.storage_manager.delete_all_repositories
         self.show_storage_info = self.storage_manager.show_storage_info
 
-        self.step1_structure = self.step_handlers.step1_structure
-        self.step2_internet = self.step_handlers.step2_internet
-        self.step3_ssh = self.step_handlers.step3_ssh
-        self.step4_users = self.step_handlers.step4_users
-        self.step5_user_data = self.step_handlers.step5_user_data
-        self.step6_repositories = self.step_handlers.step6_repositories
-        self.step7_local_check = self.step_handlers.step7_local_check
-        self.step8_update_check = self.step_handlers.step8_update_check
+        self.step1_structure = self.step_handlers.check_structure_step
+        self.step2_internet = self.step_handlers.check_internet_connection_step
+        self.step3_ssh = self.step_handlers.check_ssh_configuration_step
+        self.step4_users = self.step_handlers.set_user_step
+        self.step5_user_data = self.step_handlers.get_github_user_data_step
+        self.step6_repositories = self.step_handlers.get_repositories_step
+        self.step7_local_check = self.step_handlers.check_local_repositories_step
+        self.step8_update_check = self.step_handlers.check_need_update_repositories_step
 
     def run_full_checkup(self):
         try:
@@ -140,7 +142,8 @@ class EnhancedSmartGitCLI(SmartGitCLI):
             print_error(f"Critical error: {e}")
             traceback.print_exc()
 
-    def _get_menu_choice(self, prompt: str, min_choice: int, max_choice: int) -> int:
+    @staticmethod
+    def get_menu_choice(prompt: str, min_choice: int, max_choice: int):
         while True:
             try:
                 choice_str = input(f"\n{Colors.CYAN}{prompt} [{min_choice}-{max_choice}]: {Colors.END}").strip()
@@ -161,7 +164,8 @@ class EnhancedSmartGitCLI(SmartGitCLI):
             except (KeyboardInterrupt, EOFError):
                 return 0
 
-    def ask_yes_no(self, question: str) -> bool:
+    @staticmethod
+    def ask_yes_no(question: str) -> bool:
         while True:
             response = input(f"\n{Colors.CYAN}{question} (y/n): {Colors.END}").strip().lower()
 

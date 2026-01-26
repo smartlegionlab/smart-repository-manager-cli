@@ -12,7 +12,7 @@ from smart_repository_manager_core.utils.file_ops import FileOperations
 
 from engine.ui.result_logger import ResultLogger
 from engine.ui.state_manager import UIStateManager
-from engine.utils.decorator import (
+from engine.utils.text_decorator import (
     Colors,
     clear_screen,
     print_section,
@@ -23,21 +23,17 @@ from engine.utils.decorator import (
     print_warning
 )
 
-sys.path.insert(0, str(Path(__file__).parent))
+from smart_repository_manager_core.core.models.repository import Repository
+from smart_repository_manager_core.core.models.user import User
+from smart_repository_manager_core.services.git_service import GitService
+from smart_repository_manager_core.services.github_service import GitHubService
+from smart_repository_manager_core.services.network_service import NetworkService
+from smart_repository_manager_core.services.ssh_service import SSHService
+from smart_repository_manager_core.services.structure_service import StructureService
+from smart_repository_manager_core.services.sync_service import SyncService
+from smart_repository_manager_core.utils.helpers import Helpers
 
-try:
-    from smart_repository_manager_core.core.models.repository import Repository
-    from smart_repository_manager_core.core.models.user import User
-    from smart_repository_manager_core.services.git_service import GitService
-    from smart_repository_manager_core.services.github_service import GitHubService
-    from smart_repository_manager_core.services.network_service import NetworkService
-    from smart_repository_manager_core.services.ssh_service import SSHService
-    from smart_repository_manager_core.services.structure_service import StructureService
-    from smart_repository_manager_core.services.sync_service import SyncService
-    from smart_repository_manager_core.utils.helpers import Helpers
-except ImportError as e:
-    print(f"Error importing core modules: {e}")
-    sys.exit(1)
+sys.path.insert(0, str(Path(__file__).parent))
 
 
 class SmartGitCLI:
@@ -111,12 +107,14 @@ class SmartGitCLI:
             print(e)
             return False
 
-    def print_header(self):
+    @staticmethod
+    def print_header():
         clear_screen()
         print_section("Smart Repository Manager - FULL SYSTEM CHECK")
         print_info("Initializing system...")
 
-    def log_step(self, step: int, title: str):
+    @staticmethod
+    def log_step(step: int, title: str):
         print(f"\n{Colors.BOLD}{Colors.CYAN}Step {step}: {title}{Colors.END}")
         print(f"{Colors.CYAN}{'-' * 50}{Colors.END}")
 
@@ -151,7 +149,7 @@ class SmartGitCLI:
             print_error(f"Error loading repositories: {e}")
             return False
 
-    def _calculate_needs_update_count(self) -> int:
+    def calculate_needs_update_count(self) -> int:
         if not self.current_user or not self.repositories:
             return 0
 
@@ -173,7 +171,8 @@ class SmartGitCLI:
 
         return needs_update_count
 
-    def _show_sync_summary(self, stats: Dict[str, Any], operation: str):
+    @staticmethod
+    def show_sync_summary(stats: Dict[str, Any], operation: str):
         print(f"\n{Colors.BOLD}{'=' * 60}{Colors.END}")
         print(f"{Colors.BOLD}{operation.upper()} SUMMARY{Colors.END}")
         print(f"{Colors.BOLD}{'=' * 60}{Colors.END}")
@@ -192,13 +191,13 @@ class SmartGitCLI:
             print(f"  • Total time: {Helpers.format_duration(total_time)}")
             print(f"  • Average per repo: {Helpers.format_duration(avg_time)}")
 
-    def _update_ui_state(self):
+    def update_ui_state(self):
         self.ui_state.get_all_repositories(self.repositories)
         self.ui_state.get_private_public_repositories(self.repositories)
 
-        self.ui_state.set('needs_update_count', self._calculate_needs_update_count())
+        self.ui_state.set('needs_update_count', self.calculate_needs_update_count())
 
-    def _get_external_ip(self) -> Optional[str]:
+    def get_external_ip(self) -> Optional[str]:
 
         ip_services = [
             "https://api.ipify.org",
@@ -230,7 +229,8 @@ class SmartGitCLI:
 
         return None
 
-    def _is_valid_ip(self, ip: str) -> bool:
+    @staticmethod
+    def _is_valid_ip(ip: str) -> bool:
 
         try:
             clean_ip = ip.split(' ')[0]

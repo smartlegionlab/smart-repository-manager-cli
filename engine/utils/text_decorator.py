@@ -127,16 +127,6 @@ def print_table(headers: List[str], rows: List[List], max_width: int = 60):
         print(" | ".join(display_row))
 
 
-def print_progress_bar(iteration: int, total: int, prefix: str = '', suffix: str = '',
-                       length: int = 40, fill: str = '█'):
-    percent = ("{0:.1f}").format(100 * (iteration / float(total)))
-    filled_length = int(length * iteration // total)
-    bar = fill * filled_length + '-' * (length - filled_length)
-    print(f'\r{prefix} |{bar}| {percent}% {suffix}', end='\r')
-    if iteration == total:
-        print()
-
-
 def wait_for_enter(prompt: str = "Press Enter to continue..."):
     print(f"\n{Colors.YELLOW}{prompt}{Colors.END}", end="")
     input()

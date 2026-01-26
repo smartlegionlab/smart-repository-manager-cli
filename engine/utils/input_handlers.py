@@ -1,10 +1,10 @@
 # Copyright (©) 2026, Alexander Suvorov. All rights reserved.
-from engine.utils.decorator import Colors, print_error
+from engine.utils.text_decorator import Colors, print_error
 
 
 class InputHandler:
     @staticmethod
-    def get_menu_choice(prompt: str, min_choice: int, max_choice: int) -> int:
+    def get_menu_choice(prompt: str, min_choice: int, max_choice: int):
         while True:
             try:
                 choice_str = input(f"\n{Colors.CYAN}{prompt} [{min_choice}-{max_choice}]: {Colors.END}").strip()

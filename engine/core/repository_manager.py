@@ -1,7 +1,7 @@
 # Copyright (©) 2026, Alexander Suvorov. All rights reserved.
 import subprocess
 
-from engine.utils.decorator import (
+from engine.utils.text_decorator import (
     Colors,
     clear_screen,
     print_section,
@@ -48,7 +48,7 @@ class RepositoryManager:
             print(f"\n{Colors.BOLD}{Colors.BLUE}0.{Colors.END} {Icons.BACK} Back")
             print('=' * 60)
 
-            choice = self.cli._get_menu_choice("Select option", 0, 5)
+            choice = self.cli.get_menu_choice("Select option", 0, 5)
 
             if choice == 0:
                 self.cli.current_menu = self.cli.menu_stack.pop()
@@ -230,7 +230,8 @@ class RepositoryManager:
                     healthy_count += 1
                 else:
                     broken_count += 1
-            except:
+            except Exception as e:
+                print(e)
                 broken_count += 1
 
         print(f"\n{Colors.BOLD}Health Status:{Colors.END}")
@@ -255,7 +256,7 @@ class RepositoryManager:
             print(f"{i:2d}. {repo.name}")
 
         try:
-            choice = self.cli._get_menu_choice(f"\nSelect repository (0 for exit)", 0, len(self.cli.repositories))
+            choice = self.cli.get_menu_choice(f"\nSelect repository (0 for exit)", 0, len(self.cli.repositories))
 
             if not choice:
                 return

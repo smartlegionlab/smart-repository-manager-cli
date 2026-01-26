@@ -1,7 +1,7 @@
 # Copyright (©) 2026, Alexander Suvorov. All rights reserved.
 import subprocess
 
-from engine.utils.decorator import (
+from engine.utils.text_decorator import (
     Colors,
     clear_screen,
     print_section,
@@ -41,7 +41,7 @@ class SyncManager:
             print(f"\n{Colors.BOLD}{Colors.BLUE}0.{Colors.END} {Icons.BACK} Back")
             print('=' * 60)
 
-            choice = self.cli._get_menu_choice("Select option", 0, 5)
+            choice = self.cli.get_menu_choice("Select option", 0, 5)
 
             if choice == 0:
                 self.cli.current_menu = self.cli.menu_stack.pop()
@@ -107,7 +107,7 @@ class SyncManager:
                 print_error(f"Failed: {message}")
                 stats["failed"] += 1
 
-        self.cli._show_sync_summary(stats, "Cloning")
+        self.cli.show_sync_summary(stats, "Cloning")
 
 
     def sync_all_repositories(self):
@@ -166,7 +166,7 @@ class SyncManager:
                 print_error(f"Failed: {message}")
                 stats["failed"] += 1
 
-        self.cli._show_sync_summary(stats, "Cloning")
+        self.cli.show_sync_summary(stats, "Cloning")
 
 
     def update_needed_repositories(self):
@@ -219,7 +219,7 @@ class SyncManager:
                 print_error(f"Failed: {message}")
                 stats["failed"] += 1
 
-        self.cli._show_sync_summary(stats, "Updating")
+        self.cli.show_sync_summary(stats, "Updating")
 
 
     def sync_missing_repositories(self):
@@ -285,7 +285,7 @@ class SyncManager:
                 print_error(f"Failed: {message}")
                 stats["failed"] += 1
 
-        self.cli._show_sync_summary(stats, "Cloning")
+        self.cli.show_sync_summary(stats, "Cloning")
 
     def sync_with_repair(self):
         clear_screen()
@@ -327,7 +327,8 @@ class SyncManager:
                         )
                         if result.returncode != 0:
                             broken_repos.append(repo)
-                    except:
+                    except Exception as e:
+                        print(e)
                         broken_repos.append(repo)
 
         if broken_repos:
@@ -376,4 +377,4 @@ class SyncManager:
                 print_error(f"Failed: {message}")
                 stats["failed"] += 1
 
-        self.cli._show_sync_summary(stats, "Repair Sync")
+        self.cli.show_sync_summary(stats, "Repair Sync")
