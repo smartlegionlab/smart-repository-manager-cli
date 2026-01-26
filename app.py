@@ -68,14 +68,14 @@ class EnhancedSmartGitCLI(SmartGitCLI):
         self.delete_all_repositories = self.storage_manager.delete_all_repositories
         self.show_storage_info = self.storage_manager.show_storage_info
 
-        self.step1_structure = self.step_handlers.step1_structure
-        self.step2_internet = self.step_handlers.step2_internet
-        self.step3_ssh = self.step_handlers.step3_ssh
-        self.step4_users = self.step_handlers.step4_users
-        self.step5_user_data = self.step_handlers.step5_user_data
-        self.step6_repositories = self.step_handlers.step6_repositories
-        self.step7_local_check = self.step_handlers.step7_local_check
-        self.step8_update_check = self.step_handlers.step8_update_check
+        self.step1_structure = self.step_handlers.check_structure_step
+        self.step2_internet = self.step_handlers.check_internet_connection_step
+        self.step3_ssh = self.step_handlers.check_ssh_configuration_step
+        self.step4_users = self.step_handlers.set_user_step
+        self.step5_user_data = self.step_handlers.get_github_user_data_step
+        self.step6_repositories = self.step_handlers.get_repositories_step
+        self.step7_local_check = self.step_handlers.check_local_repositories_step
+        self.step8_update_check = self.step_handlers.check_need_update_repositories_step
 
     def run_full_checkup(self):
         try:

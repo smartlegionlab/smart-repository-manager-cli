@@ -20,7 +20,8 @@ class StepHandlers:
     def __init__(self, cli):
         self.cli = cli
 
-    def step1_structure(self) -> bool:
+    # Step 1
+    def check_structure_step(self) -> bool:
         time.sleep(1.0)
         self.cli.log_step(1, "Checking directory structure")
 
@@ -81,7 +82,8 @@ class StepHandlers:
         except Exception as e:
             return self.cli.log_result(False, f"Structure check error: {str(e)}")
 
-    def step2_internet(self) -> bool:
+    # Step 2
+    def check_internet_connection_step(self) -> bool:
         self.cli.log_step(2, "Checking internet connection")
 
         try:
@@ -154,7 +156,8 @@ class StepHandlers:
         except Exception as e:
             return self.cli.log_result(False, f"Network check error: {str(e)}")
 
-    def step3_ssh(self) -> bool:
+    # Step 3
+    def check_ssh_configuration_step(self) -> bool:
         self.cli.log_step(3, "Checking SSH configuration")
 
         try:
@@ -207,7 +210,8 @@ class StepHandlers:
         except Exception as e:
             return self.cli.log_result(False, f"SSH check error: {str(e)}")
 
-    def fix_ssh_issues(self, ssh: SSHService, validation):
+    @staticmethod
+    def fix_ssh_issues(ssh: SSHService, validation):
         print(f"\n  {Colors.YELLOW}Fixing SSH issues...{Colors.END}")
 
         if any("permission" in error.lower() for error in validation.errors):
@@ -227,7 +231,8 @@ class StepHandlers:
             success, message, key_path = ssh.generate_ssh_key()
             print(f"  {'✅' if success else '❌'} {message}")
 
-    def step4_users(self) -> bool:
+    # Step 4
+    def set_user_step(self):
         self.cli.log_step(4, "Managing GitHub Users")
 
         try:
@@ -300,7 +305,7 @@ class StepHandlers:
         except Exception as e:
             return self.cli.log_result(False, f"User management error: {str(e)}")
 
-    def add_new_user_step(self, config_service: ConfigService) -> bool:
+    def add_new_user_step(self, config_service: ConfigService):
         print(f"\n  {Colors.BOLD}Adding new GitHub user{Colors.END}")
 
         while True:
@@ -380,7 +385,8 @@ class StepHandlers:
 
         return False
 
-    def step5_user_data(self) -> bool:
+    # Step 5
+    def get_github_user_data_step(self) -> bool:
         self.cli.log_step(5, "Getting GitHub user data")
 
         if not self.cli.current_token:
@@ -439,7 +445,8 @@ class StepHandlers:
                 try:
                     reset_time = datetime.fromtimestamp(int(limits["reset"]))
                     limits_data["reset_time"] = reset_time.strftime("%Y-%m-%d %H:%M:%S")
-                except:
+                except Exception as e:
+                    print(e)
                     pass
 
             self.cli.log_result(
@@ -453,7 +460,8 @@ class StepHandlers:
         except Exception as e:
             return self.cli.log_result(False, f"Error getting user data: {str(e)}")
 
-    def step6_repositories(self) -> bool:
+    # Step 6
+    def get_repositories_step(self) -> bool:
         self.cli.log_step(6, "Getting GitHub repositories")
 
         if not self.cli.current_token or not self.cli.current_user:
@@ -510,7 +518,8 @@ class StepHandlers:
         except Exception as e:
             return self.cli.log_result(False, f"Error loading repositories: {str(e)}")
 
-    def step7_local_check(self) -> bool:
+    # Step 7
+    def check_local_repositories_step(self) -> bool:
         self.cli.log_step(7, "Checking local repository copies")
 
         if not self.cli.current_user or not self.cli.repositories:
@@ -565,7 +574,8 @@ class StepHandlers:
         except Exception as e:
             return self.cli.log_result(False, f"Error checking local copies: {str(e)}")
 
-    def step8_update_check(self) -> bool:
+    # Step 8
+    def check_need_update_repositories_step(self) -> bool:
         self.cli.log_step(8, "Checking for updates needed")
         print_info('Please be patient...')
 
@@ -580,7 +590,7 @@ class StepHandlers:
 
             repos_path = user_structure["repositories"]
 
-            needs_update = self.cli._calculate_needs_update_count()
+            needs_update = self.cli.calculate_needs_update_count()
             up_to_date = len(self.cli.repositories) - needs_update
             not_cloned = []
 
@@ -591,12 +601,14 @@ class StepHandlers:
                     not_cloned.append(repo.name)
                     continue
 
+            update_per = f"{(needs_update / len(self.cli.repositories) * 100):.1f}%" if self.cli.repositories else "0%"
+
             data = {
                 "total_repositories": len(self.cli.repositories),
                 "needs_update": needs_update,
                 "up_to_date": up_to_date,
                 "not_cloned": len(not_cloned),
-                "update_percentage": f"{(needs_update / len(self.cli.repositories) * 100):.1f}%" if self.cli.repositories else "0%"
+                "update_percentage": update_per
             }
 
             success = self.cli.log_result(

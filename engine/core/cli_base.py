@@ -149,7 +149,7 @@ class SmartGitCLI:
             print_error(f"Error loading repositories: {e}")
             return False
 
-    def _calculate_needs_update_count(self) -> int:
+    def calculate_needs_update_count(self) -> int:
         if not self.current_user or not self.repositories:
             return 0
 
@@ -195,7 +195,7 @@ class SmartGitCLI:
         self.ui_state.get_all_repositories(self.repositories)
         self.ui_state.get_private_public_repositories(self.repositories)
 
-        self.ui_state.set('needs_update_count', self._calculate_needs_update_count())
+        self.ui_state.set('needs_update_count', self.calculate_needs_update_count())
 
     def get_external_ip(self) -> Optional[str]:
 
