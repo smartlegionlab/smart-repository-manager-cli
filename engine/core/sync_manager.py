@@ -327,7 +327,8 @@ class SyncManager:
                         )
                         if result.returncode != 0:
                             broken_repos.append(repo)
-                    except:
+                    except Exception as e:
+                        print(e)
                         broken_repos.append(repo)
 
         if broken_repos:
