@@ -4,7 +4,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any, List
 
-from engine.utils.decorator import Colors, Icons, print_success
+from engine.utils.decorator import Colors, print_success
 
 
 class ResultLogger:
