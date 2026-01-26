@@ -1,5 +1,4 @@
 # Copyright (©) 2026, Alexander Suvorov. All rights reserved.
-import sys
 import time
 import traceback
 
@@ -10,13 +9,16 @@ from engine.core.ssh_manager import SSHManager
 from engine.core.step_handlers import StepHandlers
 from engine.core.storage_manager import StorageManager
 from engine.core.sync_manager import SyncManager
-from engine.utils.text_decorator import Colors, print_error, print_warning, print_info, wait_for_enter, print_section
+from engine.utils.text_decorator import (
+    Colors,
+    print_error,
+    print_warning,
+    print_info,
+    wait_for_enter,
+    print_section
+)
 
-try:
-    from smart_repository_manager_core.utils.helpers import Helpers
-except ImportError as e:
-    print(f"Error importing core modules: {e}")
-    sys.exit(1)
+from smart_repository_manager_core.utils.helpers import Helpers
 
 
 class EnhancedSmartGitCLI(SmartGitCLI):
@@ -162,7 +164,8 @@ class EnhancedSmartGitCLI(SmartGitCLI):
             except (KeyboardInterrupt, EOFError):
                 return 0
 
-    def ask_yes_no(self, question: str) -> bool:
+    @staticmethod
+    def ask_yes_no(question: str) -> bool:
         while True:
             response = input(f"\n{Colors.CYAN}{question} (y/n): {Colors.END}").strip().lower()
 
