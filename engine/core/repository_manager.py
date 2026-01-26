@@ -230,7 +230,8 @@ class RepositoryManager:
                     healthy_count += 1
                 else:
                     broken_count += 1
-            except:
+            except Exception as e:
+                print(e)
                 broken_count += 1
 
         print(f"\n{Colors.BOLD}Health Status:{Colors.END}")
