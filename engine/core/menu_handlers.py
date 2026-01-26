@@ -76,7 +76,7 @@ class MenuHandlers:
             print(f"\n{Colors.BOLD}{Colors.RED}0.{Colors.END} {Icons.EXIT} Exit")
             print('=' * 60)
 
-            choice = self.cli._get_menu_choice("Select option", 0, 9)
+            choice = self.cli.get_menu_choice("Select option", 0, 9)
 
             if choice == 0:
                 print_success("Goodbye!")
@@ -166,8 +166,8 @@ class MenuHandlers:
                 try:
                     reset_time = datetime.fromtimestamp(int(limits["reset"]))
                     print(f"  • {Icons.CLOCK} Resets: {reset_time.strftime('%Y-%m-%d %H:%M:%S')}")
-                except:
-                    pass
+                except Exception as e:
+                    print(e)
 
             token_preview = self.cli.current_token if len(
                 self.cli.current_token) > 12 else "***"

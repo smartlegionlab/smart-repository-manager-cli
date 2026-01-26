@@ -57,7 +57,7 @@ class SSHManager:
             print(f"\n{Colors.BOLD}{Colors.BLUE}0.{Colors.END} {Icons.BACK}  Back")
             print('=' * 60)
 
-            choice = self.cli._get_menu_choice("Select option", 0, 8)
+            choice = self.cli.get_menu_choice("Select option", 0, 8)
 
             if choice == 0:
                 self.cli.current_menu = self.cli.menu_stack.pop()
@@ -153,7 +153,7 @@ class SSHManager:
         print_menu_item("3", "ECDSA", Icons.KEY)
         print_menu_item("4", "DSA (Not recommended)", Icons.WARNING)
 
-        key_type_choice = self.cli._get_menu_choice("Select key type", 1, 4)
+        key_type_choice = self.cli.get_menu_choice("Select key type", 1, 4)
 
         key_type_map = {
             1: SSHKeyType.ED25519,

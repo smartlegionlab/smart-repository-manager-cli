@@ -48,7 +48,7 @@ class RepositoryManager:
             print(f"\n{Colors.BOLD}{Colors.BLUE}0.{Colors.END} {Icons.BACK} Back")
             print('=' * 60)
 
-            choice = self.cli._get_menu_choice("Select option", 0, 5)
+            choice = self.cli.get_menu_choice("Select option", 0, 5)
 
             if choice == 0:
                 self.cli.current_menu = self.cli.menu_stack.pop()
@@ -255,7 +255,7 @@ class RepositoryManager:
             print(f"{i:2d}. {repo.name}")
 
         try:
-            choice = self.cli._get_menu_choice(f"\nSelect repository (0 for exit)", 0, len(self.cli.repositories))
+            choice = self.cli.get_menu_choice(f"\nSelect repository (0 for exit)", 0, len(self.cli.repositories))
 
             if not choice:
                 return

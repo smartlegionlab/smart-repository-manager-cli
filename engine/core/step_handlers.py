@@ -253,7 +253,7 @@ class StepHandlers:
                     print_menu_item(f"  {len(config.users) + 3}", "Continue without changes")
                     print_menu_item(f"  {len(config.users) + 4}", "Exit")
 
-                    choice = self.cli._get_menu_choice("Select action", 1, len(config.users) + 4)
+                    choice = self.cli.get_menu_choice("Select action", 1, len(config.users) + 4)
 
                     if choice <= len(config.users):
                         username = list(config.users.keys())[choice - 1]
@@ -357,7 +357,7 @@ class StepHandlers:
 
         print(f"    {len(config.users) + 1}. Cancel")
 
-        choice = self.cli._get_menu_choice("Select user", 1, len(config.users) + 1)
+        choice = self.cli.get_menu_choice("Select user", 1, len(config.users) + 1)
 
         if choice <= len(config.users):
             username = list(config.users.keys())[choice - 1]

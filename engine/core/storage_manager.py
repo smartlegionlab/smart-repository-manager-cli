@@ -50,7 +50,7 @@ class StorageManager:
             print(f"\n{Colors.BOLD}{Colors.BLUE}0.{Colors.END} {Icons.BACK} Back")
             print('=' * 60)
 
-            choice = self.cli._get_menu_choice("Select option", 0, 3)
+            choice = self.cli.get_menu_choice("Select option", 0, 3)
 
             if choice == 0:
                 self.cli.current_menu = self.cli.menu_stack.pop()
@@ -130,7 +130,7 @@ class StorageManager:
         for i, repo in enumerate(local_repos, 1):
             print(f"  {i}. {repo.name}")
 
-        choice = self.cli._get_menu_choice("\nSelect repository to delete (0 to cancel)", 0, len(local_repos))
+        choice = self.cli.get_menu_choice("\nSelect repository to delete (0 to cancel)", 0, len(local_repos))
 
         if choice == 0:
             print_info("Deletion cancelled")

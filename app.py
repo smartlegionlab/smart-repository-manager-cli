@@ -140,7 +140,8 @@ class EnhancedSmartGitCLI(SmartGitCLI):
             print_error(f"Critical error: {e}")
             traceback.print_exc()
 
-    def _get_menu_choice(self, prompt: str, min_choice: int, max_choice: int) -> int:
+    @staticmethod
+    def get_menu_choice(prompt: str, min_choice: int, max_choice: int):
         while True:
             try:
                 choice_str = input(f"\n{Colors.CYAN}{prompt} [{min_choice}-{max_choice}]: {Colors.END}").strip()
