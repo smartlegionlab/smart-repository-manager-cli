@@ -229,7 +229,9 @@ class StorageManager:
         print(f"  • Repositories: {storage_info.get('repo_count', 0)}")
 
         if storage_info.get('exists') and storage_info.get('repo_count', 0) > 0:
-            avg_size = storage_info.get('total_size_mb', 0) / max(1, storage_info.get('repo_count', 1))
+            total_size_mb = storage_info.get('total_size_mb', 0)
+            repo_count = max(1, storage_info.get('repo_count', 1))
+            avg_size = total_size_mb / repo_count
             print(f"  • Average per repo: {avg_size:.2f} MB")
 
         print(f"\n{Colors.BOLD}Additional Information:{Colors.END}")
