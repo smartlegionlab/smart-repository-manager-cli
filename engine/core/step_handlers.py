@@ -133,7 +133,7 @@ class StepHandlers:
                     {"ip_addresses": ip_addresses[:3]}
                 )
 
-                external_ip = self.cli._get_external_ip()
+                external_ip = self.cli.get_external_ip()
                 if external_ip:
                     self.cli.log_result(
                         True,
@@ -503,7 +503,7 @@ class StepHandlers:
 
             print_warning(f"{Colors.BOLD} Preparing content...{Colors.END}")
 
-            self.cli._update_ui_state()
+            self.cli.update_ui_state()
 
             return success
 

@@ -107,7 +107,7 @@ class SyncManager:
                 print_error(f"Failed: {message}")
                 stats["failed"] += 1
 
-        self.cli._show_sync_summary(stats, "Cloning")
+        self.cli.show_sync_summary(stats, "Cloning")
 
 
     def sync_all_repositories(self):
@@ -166,7 +166,7 @@ class SyncManager:
                 print_error(f"Failed: {message}")
                 stats["failed"] += 1
 
-        self.cli._show_sync_summary(stats, "Cloning")
+        self.cli.show_sync_summary(stats, "Cloning")
 
 
     def update_needed_repositories(self):
@@ -219,7 +219,7 @@ class SyncManager:
                 print_error(f"Failed: {message}")
                 stats["failed"] += 1
 
-        self.cli._show_sync_summary(stats, "Updating")
+        self.cli.show_sync_summary(stats, "Updating")
 
 
     def sync_missing_repositories(self):
@@ -285,7 +285,7 @@ class SyncManager:
                 print_error(f"Failed: {message}")
                 stats["failed"] += 1
 
-        self.cli._show_sync_summary(stats, "Cloning")
+        self.cli.show_sync_summary(stats, "Cloning")
 
     def sync_with_repair(self):
         clear_screen()
@@ -376,4 +376,4 @@ class SyncManager:
                 print_error(f"Failed: {message}")
                 stats["failed"] += 1
 
-        self.cli._show_sync_summary(stats, "Repair Sync")
+        self.cli.show_sync_summary(stats, "Repair Sync")
