@@ -81,7 +81,8 @@ class SSHManager:
             if choice != 0:
                 wait_for_enter()
 
-    def show_ssh_info(self):
+    @staticmethod
+    def show_ssh_info():
         clear_screen()
         print_section("SSH INFORMATION")
 
@@ -230,7 +231,8 @@ class SSHManager:
                 print(f"{Colors.CYAN}{key['content']}{Colors.END}")
                 print()
 
-    def ssh_fix_permissions(self):
+    @staticmethod
+    def ssh_fix_permissions():
         clear_screen()
         print_section("FIX SSH PERMISSIONS")
 
@@ -242,7 +244,8 @@ class SSHManager:
         else:
             print_error(message)
 
-    def ssh_add_github_known_hosts(self):
+    @staticmethod
+    def ssh_add_github_known_hosts():
         clear_screen()
         print_section("ADD GITHUB TO KNOWN HOSTS")
 
@@ -254,7 +257,8 @@ class SSHManager:
         else:
             print_error(message)
 
-    def ssh_create_config(self):
+    @staticmethod
+    def ssh_create_config():
         clear_screen()
         print_section("CREATE SSH CONFIG")
 
@@ -274,7 +278,8 @@ class SSHManager:
         else:
             print_error(message)
 
-    def ssh_test_connection(self):
+    @staticmethod
+    def ssh_test_connection():
         clear_screen()
         print_section("TEST SSH CONNECTION")
 
@@ -289,7 +294,8 @@ class SSHManager:
         else:
             print_error(message)
 
-    def ssh_detailed_info(self):
+    @staticmethod
+    def ssh_detailed_info():
         clear_screen()
         print_section("DETAILED SSH INFORMATION")
 
