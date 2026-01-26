@@ -1,5 +1,5 @@
 # Copyright (©) 2026, Alexander Suvorov. All rights reserved.
-from engine.utils.decorator import Colors, print_error
+from engine.utils.text_decorator import Colors, print_error
 
 
 class InputHandler:

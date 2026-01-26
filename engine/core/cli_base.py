@@ -12,7 +12,7 @@ from smart_repository_manager_core.utils.file_ops import FileOperations
 
 from engine.ui.result_logger import ResultLogger
 from engine.ui.state_manager import UIStateManager
-from engine.utils.decorator import (
+from engine.utils.text_decorator import (
     Colors,
     clear_screen,
     print_section,

@@ -6,7 +6,7 @@ import time
 from pathlib import Path
 from datetime import datetime
 
-from engine.utils.decorator import Colors, print_warning, print_info, print_menu_item, print_success, print_section
+from engine.utils.text_decorator import Colors, print_warning, print_info, print_menu_item, print_success, print_section
 from smart_repository_manager_core.core.models.ssh_models import SSHStatus
 from smart_repository_manager_core.services.config_service import ConfigService
 from smart_repository_manager_core.services.github_service import GitHubService

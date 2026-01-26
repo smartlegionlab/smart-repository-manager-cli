@@ -1,5 +1,5 @@
 # Copyright (©) 2026, Alexander Suvorov. All rights reserved.
-from engine.utils.decorator import (
+from engine.utils.text_decorator import (
     Colors,
     clear_screen,
     print_section,

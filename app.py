@@ -10,7 +10,7 @@ from engine.core.ssh_manager import SSHManager
 from engine.core.step_handlers import StepHandlers
 from engine.core.storage_manager import StorageManager
 from engine.core.sync_manager import SyncManager
-from engine.utils.decorator import Colors, print_error, print_warning, print_info, wait_for_enter, print_section
+from engine.utils.text_decorator import Colors, print_error, print_warning, print_info, wait_for_enter, print_section
 
 try:
     from smart_repository_manager_core.utils.helpers import Helpers

@@ -2,7 +2,7 @@
 import shutil
 from typing import Dict, Any
 
-from engine.utils.decorator import (
+from engine.utils.text_decorator import (
     Colors,
     clear_screen,
     print_section,
