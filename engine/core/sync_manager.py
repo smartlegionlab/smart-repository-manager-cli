@@ -131,7 +131,7 @@ class SyncManager:
         print_info(f"\nStarting sync of {len(repo_list)} repositories...")
 
         stats = {
-            "cloned": 0,
+            "synced": 0,
             "failed": 0,
             "skipped": 0,
             "durations": []
@@ -161,7 +161,7 @@ class SyncManager:
                     stats["skipped"] += 1
                 else:
                     print_success(f"{message} ({Helpers.format_duration(duration)})")
-                    stats["cloned"] += 1
+                    stats["synced"] += 1
             else:
                 print_error(f"Failed: {message}")
                 stats["failed"] += 1
