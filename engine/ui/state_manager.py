@@ -39,7 +39,7 @@ class UIStateManager:
 
     def get_local_repositories(self, repos, username):
 
-        repos_path = Path.home() / "smart_repo_manager" / username / "repositories"
+        repos_path = Path.home() / "smart_repository_manager" / username / "repositories"
 
         for repo in repos:
             repo_path = repos_path / repo.name

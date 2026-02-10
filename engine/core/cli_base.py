@@ -38,7 +38,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 class SmartGitCLI:
     def __init__(self, config_path: str = "config.json"):
-        self.config_path = Path.home() / "smart_repo_manager" / config_path
+        self.config_path = Path.home() / "smart_repository_manager" / config_path
         self.current_user: Optional[User] = None
         self.current_token: Optional[str] = None
         self.repositories: List[Repository] = []
@@ -126,7 +126,7 @@ class SmartGitCLI:
             print_error("No user selected")
             return
 
-        results_dir = (Path.home() / "smart_repo_manager" / f"{self.current_user.username}" / "logs")
+        results_dir = (Path.home() / "smart_repository_manager" / f"{self.current_user.username}" / "logs")
         self.result_logger.save_results(self.current_user.username, results_dir)
 
     def load_repositories(self):

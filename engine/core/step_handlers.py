@@ -50,7 +50,7 @@ class StepHandlers:
                 }
             )
 
-            base_dir = Path.home() / "smart_repo_manager"
+            base_dir = Path.home() / "smart_repository_manager"
             base_dir_exists = base_dir.exists()
 
             if not base_dir_exists:

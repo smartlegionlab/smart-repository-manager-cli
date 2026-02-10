@@ -1,4 +1,4 @@
-# Smart Repository Manager CLI <sup>v0.2.2</sup>
+# Smart Repository Manager CLI <sup>v0.2.3</sup>
 
 A comprehensive command-line tool for managing GitHub repositories with advanced synchronization, SSH configuration management, and intelligent local repository management.
 
@@ -155,7 +155,7 @@ python app.py
 
 ### Directory Structure
 ```
-~/smart_repo_manager/
+~/smart_repository_manager/
 ├── config.json              # Application configuration
 ├── username/                # User-specific directories
 │   ├── repositories/       # Local repository clones
@@ -255,7 +255,7 @@ Detailed JSON logs are saved for each system checkup, including:
    - Check firewall settings
 
 ### Getting Help
-- Review checkup result logs in `~/smart_repo_manager/<username>/logs/`
+- Review checkup result logs in `~/smart_repository_manager/<username>/logs/`
 - Check error messages in the CLI interface
 - Verify GitHub token permissions
 - Ensure SSH keys are added to GitHub
@@ -281,9 +281,9 @@ Detailed JSON logs are saved for each system checkup, including:
 4. **Update GitHub Token**: Annually or when permissions change
 
 ### Data Backup
-- Configuration files: `~/smart_repo_manager/config.json`
-- User data: `~/smart_repo_manager/<username>/`
-- Log files: `~/smart_repo_manager/<username>/logs/`
+- Configuration files: `~/smart_repository_manager/config.json`
+- User data: `~/smart_repository_manager/<username>/`
+- Log files: `~/smart_repository_manager/<username>/logs/`
 
 ---
 
