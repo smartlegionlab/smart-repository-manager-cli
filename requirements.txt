@@ -1,1 +1,1 @@
-smart-repository-manager-core==0.2.4
+smart-repository-manager-core==0.2.5

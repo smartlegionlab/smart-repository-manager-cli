@@ -6,7 +6,7 @@ import time
 from pathlib import Path
 from datetime import datetime
 
-from engine.utils.text_decorator import Colors, print_warning, print_info, print_menu_item, print_success, print_section
+from engine.utils.text_decorator import Colors, print_info, print_menu_item, print_success, print_section
 from smart_repository_manager_core.core.models.ssh_models import SSHStatus
 from smart_repository_manager_core.services.config_service import ConfigService
 from smart_repository_manager_core.services.github_service import GitHubService
@@ -509,10 +509,6 @@ class StepHandlers:
                 data
             )
 
-            print_warning(f"{Colors.BOLD} Preparing content...{Colors.END}")
-
-            self.cli.update_ui_state()
-
             return success
 
         except Exception as e:
@@ -579,41 +575,67 @@ class StepHandlers:
         self.cli.log_step(8, "Checking for updates needed")
         print_info('Please be patient...')
 
-        if not self.cli.current_user or not self.cli.repositories:
+        user = self.cli.current_user.username
+        repositories = self.cli.repositories
+
+        if not user or not repositories:
             return self.cli.log_result(False, "No data to check updates")
 
         try:
-            user_structure = self.cli.structure_service.get_user_structure(self.cli.current_user.username)
+            user_structure = self.cli.structure_service.get_user_structure(user)
 
             if not user_structure or "repositories" not in user_structure:
                 return self.cli.log_result(False, "User structure not found")
 
             repos_path = user_structure["repositories"]
 
-            needs_update = self.cli.calculate_needs_update_count()
-            up_to_date = len(self.cli.repositories) - needs_update
-            not_cloned = []
+            User = type('User', (), {})
+            user_obj = User()
+            user_obj.username = user
 
-            for repo in self.cli.repositories:
+            batch_start = time.time()
+
+            all_update_status = self.cli.sync_service.batch_check_repositories_need_update(
+                user_obj,
+                repositories
+            )
+
+            batch_time = time.time() - batch_start
+
+            needs_update_count = 0
+
+            for repo in repositories:
+                if not repo.ssh_url:
+                    continue
+
                 repo_path = repos_path / repo.name
 
                 if not repo_path.exists() or not (repo_path / '.git').exists():
-                    not_cloned.append(repo.name)
+                    repo.need_update = True
+                    needs_update_count += 1
                     continue
 
-            update_per = f"{(needs_update / len(self.cli.repositories) * 100):.1f}%" if self.cli.repositories else "0%"
+                needs_update, message = all_update_status.get(
+                    repo.name,
+                    (True, "Not checked in batch")
+                )
+
+                repo.need_update = needs_update
+
+                if needs_update:
+                    needs_update_count += 1
+
+            update_per = f"{(needs_update_count / len(repositories) * 100):.1f}%" if repositories else "0%"
 
             data = {
-                "total_repositories": len(self.cli.repositories),
-                "needs_update": needs_update,
-                "up_to_date": up_to_date,
-                "not_cloned": len(not_cloned),
+                "total_repositories": len(repositories),
+                "needs_update": needs_update_count,
                 "update_percentage": update_per
             }
 
             success = self.cli.log_result(
                 True,
-                f"Needs update: {needs_update}/{len(self.cli.repositories)}",
+                f"Needs update: {needs_update_count}/{len(repositories)}",
                 data
             )
 

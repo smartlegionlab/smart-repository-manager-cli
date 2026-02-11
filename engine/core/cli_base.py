@@ -149,28 +149,6 @@ class SmartGitCLI:
             print_error(f"Error loading repositories: {e}")
             return False
 
-    def calculate_needs_update_count(self) -> int:
-        if not self.current_user or not self.repositories:
-            return 0
-
-        needs_update_count = 0
-
-        for repo in self.repositories:
-            if not repo.ssh_url:
-                continue
-
-            needs_update, _ = self.sync_service.check_repository_needs_update(
-                self.current_user,
-                repo
-            )
-
-            repo.need_update = needs_update
-
-            if needs_update:
-                needs_update_count += 1
-
-        return needs_update_count
-
     @staticmethod
     def show_sync_summary(stats: Dict[str, Any], operation: str):
         print(f"\n{Colors.BOLD}{'=' * 60}{Colors.END}")
@@ -190,12 +168,6 @@ class SmartGitCLI:
             print(f"\n{Colors.BOLD}⏱️ Performance:{Colors.END}")
             print(f"  • Total time: {Helpers.format_duration(total_time)}")
             print(f"  • Average per repo: {Helpers.format_duration(avg_time)}")
-
-    def update_ui_state(self):
-        self.ui_state.get_all_repositories(self.repositories)
-        self.ui_state.get_private_public_repositories(self.repositories)
-
-        self.ui_state.set('needs_update_count', self.calculate_needs_update_count())
 
     def get_external_ip(self) -> Optional[str]:
 
