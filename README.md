@@ -1,4 +1,4 @@
-# Smart Repository Manager CLI <sup>v0.2.5</sup>
+# Smart Repository Manager CLI <sup>v1.0.0</sup>
 
 A comprehensive command-line tool for managing GitHub repositories with advanced synchronization, SSH configuration management, and intelligent local repository management.
 
