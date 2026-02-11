@@ -111,6 +111,7 @@ python app.py
 - View language statistics
 - Check individual repository status
 - Run repository health checks
+- Create repositories archive
 
 #### 4. **Synchronization**
 - **Sync All**: Clone missing and update existing repositories

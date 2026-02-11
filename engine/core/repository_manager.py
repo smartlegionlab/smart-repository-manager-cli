@@ -1,6 +1,9 @@
 # Copyright (©) 2026, Alexander Suvorov. All rights reserved.
+import datetime
 import subprocess
+from pathlib import Path
 
+from engine.core.archive_creator import ArchiveCreator
 from engine.utils.text_decorator import (
     Colors,
     clear_screen,
@@ -44,11 +47,12 @@ class RepositoryManager:
             print_menu_item("3", "Language Statistics", Icons.LANGUAGE)
             print_menu_item("4", "Check Single Repository", Icons.SEARCH)
             print_menu_item("5", "Repository Health Check", Icons.CHECK)
+            print_menu_item("6", "Create Archive", Icons.STORAGE)
 
             print(f"\n{Colors.BOLD}{Colors.BLUE}0.{Colors.END} {Icons.BACK} Back")
             print('=' * 60)
 
-            choice = self.cli.get_menu_choice("Select option", 0, 5)
+            choice = self.cli.get_menu_choice("Select option", 0, 6)
 
             if choice == 0:
                 self.cli.current_menu = self.cli.menu_stack.pop()
@@ -62,6 +66,8 @@ class RepositoryManager:
                 self.check_single_repository()
             elif choice == 5:
                 self.check_repository_health()
+            elif choice == 6:
+                self.create_user_repositories_archive()
 
             if choice != 0:
                 wait_for_enter()
@@ -242,6 +248,47 @@ class RepositoryManager:
         if broken_count > 0 or missing_count > 0:
             print_warning("Some repositories have issues")
             print_info("Use 'Sync with Repair' option to fix them")
+
+    def create_user_repositories_archive(self):
+        clear_screen()
+        print_section("CREATE ARCHIVE")
+
+        username = self.cli.current_user.username
+        user_path = Path.home() / "smart_repository_manager" / username
+        repos_path = user_path / "repositories"
+        archive_path = user_path / "archives"
+        current_datetime = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        archive_name = f"{username}_repositories_{current_datetime}"
+        archive_format = 'zip'
+
+        print(f'\n{Colors.BLUE}This will create a ZIP archive containing all user data.{Colors.END}\n')
+        print(f'\n  • {Colors.YELLOW}Username:{Colors.END} {username}')
+        print(f'  • {Colors.YELLOW}Repositories path:{Colors.END} {repos_path}')
+        print(f"  • {Colors.YELLOW}Archives path:{Colors.END} {archive_path}")
+        print(f"  • {Colors.YELLOW}Archives name:{Colors.END} "
+              f"{Colors.GREEN}{archive_name}.{archive_format}{Colors.END}\n\n")
+
+        if not username:
+            print(f"\n{Colors.RED}Warning! No user selected...{Colors.END}")
+            return
+
+        response = input(f'Create archive of user {username} [y/n]? ')
+
+        if response.lower() != 'y':
+            return
+
+        print(f'\n{Colors.YELLOW}Creating archive...\nPlease wait...{Colors.END}\n')
+
+        archive_path.mkdir(parents=True, exist_ok=True)
+
+        archive_file = ArchiveCreator.create_archive(
+            folder_path=repos_path,
+            archive_format=archive_format,
+            output_dir=archive_path,
+            archive_name=archive_name
+        )
+
+        print(f'{Colors.GREEN}Archive successfully created at:{Colors.END} {archive_file}')
 
     def check_single_repository(self):
         clear_screen()
