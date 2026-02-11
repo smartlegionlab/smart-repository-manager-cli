@@ -3,7 +3,8 @@ import datetime
 import subprocess
 from pathlib import Path
 
-from engine.core.archive_creator import ArchiveCreator
+from smart_repository_manager_core.services.archive_creator import ArchiveCreator
+
 from engine.utils.text_decorator import (
     Colors,
     clear_screen,
