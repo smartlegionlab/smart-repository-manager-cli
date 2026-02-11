@@ -71,7 +71,7 @@ class MenuHandlers:
 
             print(f"\n{Colors.BOLD}⚙️  System:{Colors.END}")
             print_menu_item("8", "Restart", Icons.CHECK)
-            print_menu_item("9", " Clean Temporary Files", Icons.DELETE)
+            print_menu_item("9", " Clean Log Files", Icons.DELETE)
 
             print(f"\n{Colors.BOLD}{Colors.RED}0.{Colors.END} {Icons.EXIT} Exit")
             print('=' * 60)
@@ -102,7 +102,7 @@ class MenuHandlers:
                 self.cli.run_full_checkup()
                 break
             elif choice == 9:
-                self.clean_temp_files()
+                self.clean_log_files()
 
     def show_user_info(self):
         clear_screen()
@@ -220,9 +220,9 @@ class MenuHandlers:
 
         wait_for_enter()
 
-    def clean_temp_files(self):
+    def clean_log_files(self):
         clear_screen()
-        print_section("CLEAN TEMPORARY FILES")
+        print_section("CLEAN LOG FILES")
 
         if not self.cli.current_user:
             print_error("No user selected")
@@ -230,38 +230,38 @@ class MenuHandlers:
 
         structure = self.cli.structure_service.get_user_structure(self.cli.current_user.username)
 
-        if "temp" not in structure:
-            print_info("No temp directory exists")
+        if "logs" not in structure:
+            print_info('No "logs" directory exists')
             return
 
-        temp_dir = structure["temp"]
+        log_dir = structure["logs"]
 
-        if not temp_dir.exists():
-            print_info("Temp directory is empty")
+        if not log_dir.exists():
+            print_info("Log directory is empty...")
             return
 
         file_count = 0
         total_size = 0
 
-        for item in temp_dir.iterdir():
+        for item in log_dir.iterdir():
             if item.is_file():
                 file_count += 1
                 total_size += item.stat().st_size
 
         if file_count == 0:
-            print_success("No temporary files to clean")
+            print_success("No log files to clean")
             return
 
         size_str = Helpers.format_size(total_size)
-        print(f"Found {file_count} temporary files ({size_str})")
+        print(f"Found {file_count} log files ({size_str})")
 
-        if not self.cli.ask_yes_no("Clean temporary files?"):
+        if not self.cli.ask_yes_no("Clean log files?"):
             return
 
         try:
             removed_count = 0
 
-            for item in temp_dir.iterdir():
+            for item in log_dir.iterdir():
                 try:
                     if item.is_file():
                         item.unlink()
@@ -273,7 +273,7 @@ class MenuHandlers:
                     print(e)
                     pass
 
-            print_success(f"Cleaned {removed_count} files/directories")
+            print_success(f"Cleaned {removed_count}")
 
         except Exception as e:
             print_error(f"Error cleaning files: {e}")
