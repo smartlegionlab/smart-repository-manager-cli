@@ -242,7 +242,7 @@ class StepHandlers:
             while True:
 
                 print(f"\n  {Colors.BOLD}Current configuration:{Colors.END}")
-                print(f"    App: {config.app_name} v{config.version}")
+                print(f"    App: {config.app_name} {config.version}")
                 print(f"    Users: {len(config.users)}")
                 print(f"    Active user: {Colors.GREEN}{config.active_user or 'Not selected'}{Colors.END}")
 
