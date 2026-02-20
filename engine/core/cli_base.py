@@ -32,7 +32,6 @@ from smart_repository_manager_core.services.network_service import NetworkServic
 from smart_repository_manager_core.services.ssh_service import SSHService
 from smart_repository_manager_core.services.structure_service import StructureService
 from smart_repository_manager_core.services.sync_service import SyncService
-from smart_repository_manager_core.utils.helpers import Helpers
 
 sys.path.insert(0, str(Path(__file__).parent))
 
@@ -161,14 +160,6 @@ class SmartGitCLI:
             if key != "durations" and isinstance(value, int):
                 icon = Icons.SUCCESS if value > 0 and key in ["cloned", "synced", "repaired", "updated"] else Icons.INFO
                 print(f"  {icon} {key.replace('_', ' ').title()}: {value}")
-
-        if stats["durations"]:
-            total_time = sum(stats["durations"])
-            avg_time = total_time / len(stats["durations"]) if stats["durations"] else 0
-
-            print(f"\n{Colors.BOLD}⏱️ Performance:{Colors.END}")
-            print(f"  • Total time: {Helpers.format_duration(total_time)}")
-            print(f"  • Average per repo: {Helpers.format_duration(avg_time)}")
 
     def get_external_ip(self) -> Optional[str]:
 

@@ -3,7 +3,9 @@ import concurrent
 import subprocess
 import threading
 import time
+import json
 from pathlib import Path
+from datetime import datetime
 
 from smart_repository_manager_core.services.download_service import DownloadService
 
@@ -18,7 +20,7 @@ from engine.utils.text_decorator import (
     wait_for_enter,
     print_menu_item
 )
-from smart_repository_manager_core.utils.helpers import Helpers
+
 
 class SyncManager:
     def __init__(self, cli):
@@ -35,7 +37,7 @@ class SyncManager:
             print_section("SYNCHRONIZATION")
 
             print(f"\n{Colors.BOLD}📊 Status:{Colors.END}")
-            print(f"  • Total repositories: {self.cli.ui_state.get('repositories_count', 0)}")
+            print(f"  • Total repositories: {len(self.cli.repositories)}")
             print(f"  • Local repositories: {self.cli.get_local_exist_repos_count()}")
             print(f"  • Needs update: {self.cli.get_need_update_repos_count()}")
 
@@ -75,6 +77,57 @@ class SyncManager:
             if choice != 0:
                 wait_for_enter()
 
+    def _get_logs_dir(self) -> Path:
+        if not self.cli.current_user:
+            return Path.home() / "smart_repository_manager" / "logs" / "sync"
+
+        return Path.home() / "smart_repository_manager" / self.cli.current_user.username / "logs" / "sync"
+
+    def _save_sync_log(self, operation_name: str, stats: dict):
+        logs_dir = self._get_logs_dir()
+        logs_dir.mkdir(parents=True, exist_ok=True)
+
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        safe_op_name = operation_name.lower().replace(" ", "_")
+        log_file = logs_dir / f"{safe_op_name}_{timestamp}.json"
+
+        clean_stats = {k: v for k, v in stats.items() if k != 'durations'}
+
+        if 'results' in clean_stats and clean_stats['results']:
+            for result in clean_stats['results']:
+                if 'duration' in result:
+                    del result['duration']
+
+        log_data = {
+            "operation": operation_name,
+            "timestamp": datetime.now().isoformat(),
+            "username": self.cli.current_user.username if self.cli.current_user else "unknown",
+            "statistics": clean_stats,
+            "repositories_total": len(self.cli.repositories) if self.cli.repositories else 0,
+            "repositories_local": self.cli.get_local_exist_repos_count() if self.cli.current_user else 0,
+            "repositories_needs_update": self.cli.get_need_update_repos_count() if self.cli.current_user else 0
+        }
+
+        with open(log_file, 'w', encoding='utf-8') as f:
+            json.dump(log_data, f, indent=2, ensure_ascii=False)
+
+        print_info(f"\n📝 Log saved: {log_file}")
+
+    def _show_progress(self, completed: int, total: int, current_item: str, operation: str = "Processing"):
+        progress_pct = (completed / total) * 100
+        bar_length = 40
+        filled_length = int(bar_length * completed // total)
+        bar = '█' * filled_length + '░' * (bar_length - filled_length)
+
+        status_color = Colors.GREEN if completed == total else Colors.CYAN
+
+        print(
+            f"\r{status_color}{operation}: |{bar}| {completed}/{total} ({progress_pct:.1f}%) - Current: {current_item}{Colors.END}",
+            end='', flush=True)
+
+        if completed == total:
+            print()
+
     def download_all_repositories(self):
         clear_screen()
         print_section("DOWNLOAD ALL REPOSITORIES")
@@ -84,7 +137,6 @@ class SyncManager:
             return
 
         cpu_count = getattr(self.download_service, 'cpu_count', 4)
-
         repo_workers = max(1, cpu_count - 1)
 
         print(f"\n{Colors.BOLD}📊 Download Information:{Colors.END}")
@@ -104,7 +156,7 @@ class SyncManager:
 
         print(
             f"\n{Colors.YELLOW}Starting download of {len(self.cli.repositories)} repositories...{Colors.END}")
-        print_info(f"Using {repo_workers} workers for repository downloads")
+        print_info(f"Using {repo_workers} workers for repository downloads\n")
 
         self._stop_download = False
 
@@ -114,8 +166,9 @@ class SyncManager:
             "skipped": 0,
             "total_size_mb": 0,
             "total_branches": 0,
-            "durations": [],
-            "results": []
+            "results": [],
+            "total": len(self.cli.repositories),
+            "successful": 0
         }
 
         lock = threading.Lock()
@@ -149,13 +202,10 @@ class SyncManager:
                     verbose=False
                 )
 
-                duration = time.time() - start_time
-
                 repo_result = {
                     'repo': repo.name,
                     'success': result.get('success', False),
                     'result': result,
-                    'duration': duration,
                     'is_private': getattr(repo, 'private', False)
                 }
 
@@ -166,7 +216,6 @@ class SyncManager:
                     'repo': repo.name,
                     'success': False,
                     'error': str(e),
-                    'duration': time.time() - start_time,
                     'is_private': getattr(repo, 'private', False)
                 }
 
@@ -192,7 +241,7 @@ class SyncManager:
                             completed += 1
                             stats['results'].append(repo_result)
 
-                            self._show_progress(completed, len(self.cli.repositories), repo.name)
+                            self._show_progress(completed, len(self.cli.repositories), repo.name, "Downloading")
 
                             if repo_result.get('success'):
                                 successful_branches = repo_result.get('result', {}).get('successful', 0)
@@ -200,29 +249,30 @@ class SyncManager:
                                 size_mb = repo_result.get('result', {}).get('total_size_bytes', 0) / (1024 * 1024)
 
                                 stats['downloaded'] += 1
+                                stats['successful'] += 1
                                 stats['total_branches'] += successful_branches
                                 stats['total_size_mb'] += size_mb
 
                                 print_success(
-                                    f"✓ {repo.name}: {successful_branches}/{total_branches} branches "
-                                    f"({size_mb:.2f} MB) - {Helpers.format_duration(repo_result.get('duration', 0))}"
+                                    f"\n✓ {repo.name}: {successful_branches}/{total_branches} branches "
+                                    f"({size_mb:.2f} MB)"
                                 )
                             else:
                                 stats['failed'] += 1
                                 error_msg = repo_result.get('error', 'Unknown error')
-                                print_error(f"✗ {repo.name}: {error_msg}")
+                                print_error(f"\n✗ {repo.name}: {error_msg}")
 
                     except concurrent.futures.TimeoutError:
                         with lock:
                             completed += 1
                             stats['failed'] += 1
-                            print_error(f"✗ {repo.name}: Download timeout after 5 minutes")
+                            print_error(f"\n✗ {repo.name}: Download timeout after 5 minutes")
 
                     except Exception as e:
                         with lock:
                             completed += 1
                             stats['failed'] += 1
-                            print_error(f"✗ {repo.name}: {str(e)}")
+                            print_error(f"\n✗ {repo.name}: {str(e)}")
 
             except KeyboardInterrupt:
                 print_warning("\n\nDownload interrupted by user")
@@ -231,23 +281,11 @@ class SyncManager:
                     future.cancel()
 
         self._show_download_summary(stats)
+        self._save_sync_log("Download All Repositories", stats)
 
         if stats["downloaded"] > 0 and self.cli.ask_yes_no("Open downloads folder?"):
             downloads_dir = self.download_service.get_user_downloads_dir(self.cli.current_user.username)
             self.cli.open_folder(downloads_dir)
-
-    def _show_progress(self, completed: int, total: int, current_repo: str):
-        progress_pct = (completed / total) * 100
-        bar_length = 40
-        filled_length = int(bar_length * completed // total)
-        bar = '█' * filled_length + '░' * (bar_length - filled_length)
-
-        print(
-            f"\r{Colors.CYAN}Progress: |{bar}| {completed}/{total} ({progress_pct:.1f}%) - Current: {current_repo}{Colors.END}",
-            end='', flush=True)
-
-        if completed == total:
-            print()
 
     def _show_download_summary(self, stats):
         print(f"\n\n{Colors.BOLD}{'=' * 60}{Colors.END}")
@@ -260,13 +298,6 @@ class SyncManager:
         print(f"  {Icons.INFO} Skipped: {stats['skipped']}")
         print(f"  {Icons.STORAGE} Total branches: {stats['total_branches']}")
         print(f"  {Icons.STORAGE} Total size: {stats['total_size_mb']:.2f} MB")
-
-        if stats["durations"]:
-            total_time = sum(stats["durations"])
-            avg_time = total_time / len(stats["durations"]) if stats["durations"] else 0
-            print(f"\n{Colors.BOLD}⏱️ Performance:{Colors.END}")
-            print(f"  • Total time: {Helpers.format_duration(total_time)}")
-            print(f"  • Average per repo: {Helpers.format_duration(avg_time)}")
 
         failed_results = [r for r in stats['results'] if not r.get('success')]
         if failed_results:
@@ -317,8 +348,6 @@ class SyncManager:
         print(f"\n{Colors.YELLOW}Downloading all branches...{Colors.END}")
 
         try:
-            start_time = time.time()
-
             result = self.download_service.download_repository_with_all_branches(
                 repo_name=repo.name,
                 repo_url=repo.html_url,
@@ -326,8 +355,6 @@ class SyncManager:
                 username=self.cli.current_user.username,
                 verbose=True
             )
-
-            duration = time.time() - start_time
 
             if result.get("success"):
                 successful = result.get("successful", 0)
@@ -339,7 +366,6 @@ class SyncManager:
                 print(f"\n{Colors.BOLD}Download Details:{Colors.END}")
                 print(f"  • Directory: {result.get('download_dir')}")
                 print(f"  • Total size: {size_mb:.2f} MB")
-                print(f"  • Time: {Helpers.format_duration(duration)}")
                 print(f"  • Internal workers used: {workers}")
 
                 if result.get('results'):
@@ -356,14 +382,51 @@ class SyncManager:
                     for branch_name, branch_size in branches:
                         print(f"  • {branch_name}: {branch_size:.2f} MB")
 
+                stats = {
+                    "total": 1,
+                    "successful": 1,
+                    "failed": 0,
+                    "skipped": 0,
+                    "downloaded": 1,
+                    "total_branches": successful,
+                    "total_size_mb": size_mb,
+                    "repository_name": repo.name,
+                    "repository_url": repo.html_url,
+                    "is_private": repo.private,
+                    "branch_details": branches if 'branches' in locals() else []
+                }
+                self._save_sync_log(f"Download Single Repository - {repo.name}", stats)
+
                 if self.cli.ask_yes_no("Open downloads folder?"):
                     downloads_dir = Path(result.get('download_dir', ''))
-                    self._open_folder(downloads_dir)
+                    self.cli.open_folder(downloads_dir)
             else:
                 print_error(f"\n✗ Download failed: {result.get('error', 'Unknown error')}")
 
+                stats = {
+                    "total": 1,
+                    "successful": 0,
+                    "failed": 1,
+                    "skipped": 0,
+                    "repository_name": repo.name,
+                    "repository_url": repo.html_url,
+                    "error": result.get('error', 'Unknown error')
+                }
+                self._save_sync_log(f"Download Single Repository - {repo.name} (FAILED)", stats)
+
         except Exception as e:
             print_error(f"\n✗ Error: {e}")
+
+            stats = {
+                "total": 1,
+                "successful": 0,
+                "failed": 1,
+                "skipped": 0,
+                "repository_name": repo.name,
+                "repository_url": repo.html_url,
+                "error": str(e)
+            }
+            self._save_sync_log(f"Download Single Repository - {repo.name} (ERROR)", stats)
 
     def reclone_all_repos(self):
         clear_screen()
@@ -375,7 +438,6 @@ class SyncManager:
             return
 
         repo_list = self.cli.repositories
-
         repos_path = structure['repositories']
 
         print(f"\n{Colors.BOLD}Found {len(repo_list)} repositories:{Colors.END}")
@@ -391,30 +453,41 @@ class SyncManager:
             "cloned": 0,
             "failed": 0,
             "skipped": 0,
-            "durations": []
+            "total": len(repo_list),
+            "successful": 0,
+            "results": []
         }
 
         for i, repo in enumerate(repo_list, 1):
-            print(f"\n[{i}/{len(repo_list)}/{stats['failed']}] Re-clone: {repo.name}")
+            print(f"\n[{i}/{len(repo_list)}] Re-clone: {repo.name}")
+            self._show_progress(i, len(repo_list), repo.name, "Re-cloning")
+
             repo_path = repos_path / repo.name
             self.cli.file_operations.safe_remove(repo_path)
-            success, message, duration = self.cli.sync_service.sync_single_repository(
+
+            success, message, _ = self.cli.sync_service.sync_single_repository(
                 self.cli.current_user,
                 repo,
                 "clone"
             )
 
-            stats["durations"].append(duration)
+            result = {
+                "repo": repo.name,
+                "success": success,
+                "message": message
+            }
+            stats["results"].append(result)
 
             if success:
-                print_success(f"{message} ({Helpers.format_duration(duration)})")
+                print_success(f"✓ {message}")
                 stats["cloned"] += 1
+                stats["successful"] += 1
             else:
-                print_error(f"Failed: {message}")
+                print_error(f"✗ Failed: {message}")
                 stats["failed"] += 1
 
-        self.cli.show_sync_summary(stats, "Cloning")
-
+        self.cli.show_sync_summary(stats, "Re-cloning")
+        self._save_sync_log("Re-clone All Repositories", stats)
 
     def sync_all_repositories(self):
         clear_screen()
@@ -440,40 +513,50 @@ class SyncManager:
             "synced": 0,
             "failed": 0,
             "skipped": 0,
-            "durations": []
+            "total": len(repo_list),
+            "successful": 0,
+            "results": []
         }
 
         for i, repo in enumerate(repo_list, 1):
-            print(f"\n[{i}/{len(repo_list)}/{stats['failed']}] Sync: {repo.name}")
+            print(f"\n[{i}/{len(repo_list)}] Sync: {repo.name}")
+            self._show_progress(i, len(repo_list), repo.name, "Syncing")
 
             if repo.local_exists:
-                success, message, duration = self.cli.sync_service.sync_single_repository(
+                success, message, _ = self.cli.sync_service.sync_single_repository(
                     self.cli.current_user,
                     repo,
                     "pull"
                 )
             else:
-                success, message, duration = self.cli.sync_service.sync_single_repository(
+                success, message, _ = self.cli.sync_service.sync_single_repository(
                     self.cli.current_user,
                     repo,
                     "clone"
                 )
 
-            stats["durations"].append(duration)
+            result = {
+                "repo": repo.name,
+                "success": success,
+                "message": message,
+                "action": "pull" if repo.local_exists else "clone"
+            }
+            stats["results"].append(result)
 
             if success:
                 if message == 'Already up to date':
-                    print_info(f"{message} ({Helpers.format_duration(duration)})")
+                    print_info(f"  {message}")
                     stats["skipped"] += 1
                 else:
-                    print_success(f"{message} ({Helpers.format_duration(duration)})")
+                    print_success(f"✓ {message}")
                     stats["synced"] += 1
+                    stats["successful"] += 1
             else:
-                print_error(f"Failed: {message}")
+                print_error(f"✗ Failed: {message}")
                 stats["failed"] += 1
 
-        self.cli.show_sync_summary(stats, "Cloning")
-
+        self.cli.show_sync_summary(stats, "Sync")
+        self._save_sync_log("Sync All Repositories", stats)
 
     def update_needed_repositories(self):
         clear_screen()
@@ -504,29 +587,38 @@ class SyncManager:
         stats = {
             "updated": 0,
             "failed": 0,
-            "durations": []
+            "total": len(repo_list),
+            "successful": 0,
+            "results": []
         }
 
         for i, repo in enumerate(repo_list, 1):
-            print(f"\n[{i}/{len(repo_list)}/{stats['failed']}] Sync: {repo.name}")
+            print(f"\n[{i}/{len(repo_list)}] Updating: {repo.name}")
+            self._show_progress(i, len(repo_list), repo.name, "Updating")
 
-            success, message, duration = self.cli.sync_service.sync_single_repository(
+            success, message, _ = self.cli.sync_service.sync_single_repository(
                 self.cli.current_user,
                 repo,
                 "pull"
             )
 
-            stats["durations"].append(duration)
+            result = {
+                "repo": repo.name,
+                "success": success,
+                "message": message
+            }
+            stats["results"].append(result)
 
             if success:
-                print_success(f"{message} ({Helpers.format_duration(duration)})")
+                print_success(f"✓ {message}")
                 stats["updated"] += 1
+                stats["successful"] += 1
             else:
-                print_error(f"Failed: {message}")
+                print_error(f"✗ Failed: {message}")
                 stats["failed"] += 1
 
         self.cli.show_sync_summary(stats, "Updating")
-
+        self._save_sync_log("Update Needed Repositories", stats)
 
     def sync_missing_repositories(self):
         clear_screen()
@@ -568,30 +660,40 @@ class SyncManager:
         stats = {
             "cloned": 0,
             "failed": 0,
-            "durations": []
+            "total": len(missing_repos),
+            "successful": 0,
+            "results": []
         }
 
         for i, repo in enumerate(missing_repos, 1):
-            print(f"\n[{i}/{len(missing_repos)}/{stats['failed']}] Cloning: {repo.name}")
+            print(f"\n[{i}/{len(missing_repos)}] Cloning: {repo.name}")
+            self._show_progress(i, len(missing_repos), repo.name, "Cloning")
 
-            success, message, duration = self.cli.sync_service.sync_single_repository(
+            success, message, _ = self.cli.sync_service.sync_single_repository(
                 self.cli.current_user,
                 repo,
                 "clone"
             )
 
-            stats["durations"].append(duration)
+            result = {
+                "repo": repo.name,
+                "success": success,
+                "message": message
+            }
+            stats["results"].append(result)
 
             if success:
                 repo.update_local_status(repos_path)
                 self.cli.ui_state.state['local_repositories_count'] += 1
-                print_success(f"Cloned successfully ({Helpers.format_duration(duration)})")
+                print_success(f"✓ Cloned successfully")
                 stats["cloned"] += 1
+                stats["successful"] += 1
             else:
-                print_error(f"Failed: {message}")
+                print_error(f"✗ Failed: {message}")
                 stats["failed"] += 1
 
         self.cli.show_sync_summary(stats, "Cloning")
+        self._save_sync_log("Clone Missing Repositories", stats)
 
     def sync_with_repair(self):
         clear_screen()
@@ -648,7 +750,10 @@ class SyncManager:
             "synced": 0,
             "failed": 0,
             "skipped": 0,
-            "durations": []
+            "repaired": 0,
+            "total": len(self.cli.repositories),
+            "successful": 0,
+            "results": []
         }
 
         for i, repo in enumerate(self.cli.repositories, 1):
@@ -657,30 +762,42 @@ class SyncManager:
                 continue
 
             print(f"\n[{i}/{len(self.cli.repositories)}] Processing: {repo.name}")
+            self._show_progress(i, len(self.cli.repositories), repo.name, "Repairing")
 
-            success, message, duration = self.cli.sync_service.sync_single_repository(
+            success, message, _ = self.cli.sync_service.sync_single_repository(
                 self.cli.current_user,
                 repo,
                 "sync"
             )
 
-            stats["durations"].append(duration)
+            result = {
+                "repo": repo.name,
+                "success": success,
+                "message": message,
+                "was_broken": repo in broken_repos
+            }
+            stats["results"].append(result)
 
             if success:
                 if "repaired" in message.lower() or "re-cloned" in message.lower():
+                    stats["repaired"] += 1
+                    stats["successful"] += 1
                     if message == 'Already up to date':
-                        print_info(f"{message}: ({Helpers.format_duration(duration)})")
-                        stats['skipped'] += 1
-                    print_success(f"Repaired: {message} ({Helpers.format_duration(duration)})")
-                else:
-                    if message == 'Already up to date':
-                        print_info(f"Synced: ({Helpers.format_duration(duration)})")
+                        print_info(f"  {message}")
                         stats['skipped'] += 1
                     else:
-                        print_success(f"Synced: {message} ({Helpers.format_duration(duration)})")
-                    stats["synced"] += 1
+                        print_success(f"✓ Repaired: {message}")
+                else:
+                    if message == 'Already up to date':
+                        print_info(f"  Synced")
+                        stats['skipped'] += 1
+                    else:
+                        print_success(f"✓ Synced: {message}")
+                        stats["synced"] += 1
+                        stats["successful"] += 1
             else:
-                print_error(f"Failed: {message}")
+                print_error(f"✗ Failed: {message}")
                 stats["failed"] += 1
 
         self.cli.show_sync_summary(stats, "Repair Sync")
+        self._save_sync_log("Sync with Repair", stats)
