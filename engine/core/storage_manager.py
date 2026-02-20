@@ -2,6 +2,8 @@
 import shutil
 from typing import Dict, Any
 
+from smart_repository_manager_core.services.download_service import DownloadService
+
 from engine.utils.text_decorator import (
     Colors,
     clear_screen,
@@ -12,12 +14,13 @@ from engine.utils.text_decorator import (
     print_error,
     print_warning,
     wait_for_enter,
-    print_menu_item
+    print_menu_item, print_table
 )
 
 class StorageManager:
     def __init__(self, cli):
         self.cli = cli
+        self.download_service = DownloadService()
 
     def show_storage_menu(self):
         self.cli.menu_stack.append(self.cli.current_menu)
@@ -46,11 +49,12 @@ class StorageManager:
             print_menu_item("1", "Delete Repository", Icons.DELETE)
             print_menu_item("2", "Delete All Repos", Icons.DELETE)
             print_menu_item("3", "Storage Information", Icons.INFO)
+            print_menu_item("4", "Manage Downloaded Archives", Icons.STORAGE)
 
             print(f"\n{Colors.BOLD}{Colors.BLUE}0.{Colors.END} {Icons.BACK} Back")
             print('=' * 60)
 
-            choice = self.cli.get_menu_choice("Select option", 0, 3)
+            choice = self.cli.get_menu_choice("Select option", 0, 4)
 
             if choice == 0:
                 self.cli.current_menu = self.cli.menu_stack.pop()
@@ -60,6 +64,8 @@ class StorageManager:
                 self.delete_all_repositories()
             elif choice == 3:
                 self.show_storage_info()
+            elif choice == 4:
+                self.manage_downloaded_archives()
 
             if choice != 0:
                 wait_for_enter()
@@ -237,3 +243,104 @@ class StorageManager:
         print(f"\n{Colors.BOLD}Additional Information:{Colors.END}")
         print(f"  • 1 MB = 1024 KB")
         print(f"  • 1 GB = 1024 MB")
+
+    def manage_downloaded_archives(self):
+        clear_screen()
+        print_section("MANAGE DOWNLOADED ARCHIVES")
+
+        if not self.cli.current_user:
+            print_error("No user selected")
+            return
+
+        result = self.download_service.list_downloaded_archives(self.cli.current_user.username)
+
+        if not result.get("success"):
+            print_error(f"Error: {result.get('error', 'Unknown error')}")
+            return
+
+        archives = result.get("archives", [])
+
+        if not archives:
+            print_info("No downloaded archives found")
+            print_info("Use 'Download All Repositories' to create archives")
+            return
+
+        total_size = result.get("total_size_bytes", 0) / (1024 * 1024)
+        print(f"\n{Colors.BOLD}📦 Archives Summary:{Colors.END}")
+        print(f"  • Total archives: {len(archives)}")
+        print(f"  • Total size: {total_size:.2f} MB")
+        print(f"  • Directory: {result.get('directory')}")
+
+        repos = {}
+        for archive in archives:
+            repo_name = archive.get('repository', 'Unknown')
+            if repo_name not in repos:
+                repos[repo_name] = []
+            repos[repo_name].append(archive)
+
+        print(f"\n{Colors.BOLD}Archives by Repository:{Colors.END}")
+        for repo_name, repo_archives in list(repos.items())[:5]:
+            repo_size = sum(a.get('size_bytes', 0) for a in repo_archives) / (1024 * 1024)
+            print(f"\n  {Colors.CYAN}{repo_name}{Colors.END} ({len(repo_archives)} branches, {repo_size:.2f} MB)")
+            for archive in repo_archives[:3]:
+                print(f"    • {archive['branch']}: {archive['size_formatted']}")
+
+        if len(repos) > 5:
+            print_info(f"\n... and {len(repos) - 5} more repositories")
+
+        print(f"\n{Colors.BOLD}Options:{Colors.END}")
+        print_menu_item("1", "Open Downloads Folder", Icons.FOLDER)
+        print_menu_item("2", "Delete All Archives", Icons.DELETE)
+        print_menu_item("3", "Show All Archives", Icons.LIST)
+        print_menu_item("0", "Back", Icons.BACK)
+
+        choice = self.cli.get_menu_choice("Select option", 0, 3)
+
+        if choice == 1:
+            downloads_dir = self.download_service.get_user_downloads_dir(self.cli.current_user.username)
+            self.cli.open_folder(downloads_dir)
+        elif choice == 2:
+            self._delete_all_archives()
+        elif choice == 3:
+            self._show_all_archives(archives)
+
+    def _show_all_archives(self, archives):
+        clear_screen()
+        print_section("ALL DOWNLOADED ARCHIVES")
+
+        headers = ["#", "Repository", "Branch", "Size", "Date"]
+        rows = []
+
+        for i, archive in enumerate(archives, 1):
+            rows.append([
+                i,
+                archive.get('repository', 'Unknown')[:30],
+                archive.get('branch', 'Unknown')[:20],
+                archive.get('size_formatted', '0 B'),
+                archive.get('modified', '')[:10]
+            ])
+
+        print_table(headers, rows)
+        print_info(f"\nTotal: {len(archives)} archives")
+
+    def _delete_all_archives(self):
+        if not self.cli.ask_yes_no(f"{Colors.RED}Delete ALL downloaded archives?{Colors.END}"):
+            return
+
+        downloads_dir = self.download_service.get_user_downloads_dir(self.cli.current_user.username)
+
+        if not downloads_dir.exists():
+            print_info("No downloads directory found")
+            return
+
+        try:
+            total_size = 0
+            for item in downloads_dir.rglob('*'):
+                if item.is_file():
+                    total_size += item.stat().st_size
+
+            shutil.rmtree(downloads_dir)
+            size_mb = total_size / (1024 * 1024)
+            print_success(f"All archives deleted successfully (freed {size_mb:.2f} MB)")
+        except Exception as e:
+            print_error(f"Error deleting archives: {e}")

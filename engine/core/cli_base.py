@@ -1,6 +1,7 @@
 # Copyright (©) 2026, Alexander Suvorov. All rights reserved.
 import ipaddress
 import socket
+import subprocess
 import sys
 import time
 import signal
@@ -251,3 +252,11 @@ class SmartGitCLI:
                     return False
 
         return False
+
+    def open_folder(self, folder_path: Path):
+        try:
+            folder = str(folder_path)
+            subprocess.run(["xdg-open", folder])
+            print_info(f"Opened folder: {folder}")
+        except Exception as e:
+            print_error(f"Could not open folder: {e}")
