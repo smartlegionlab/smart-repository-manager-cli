@@ -73,10 +73,13 @@ class MenuHandlers:
             print_menu_item("8", "Restart", Icons.CHECK)
             print_menu_item("9", " Clean Log Files", Icons.DELETE)
 
+            print_menu_item("10", "Help / Quick Guide", Icons.INFO)
+            print_menu_item("11", "About", Icons.INFO)
+
             print(f"\n{Colors.BOLD}{Colors.RED}0.{Colors.END} {Icons.EXIT} Exit")
             print('=' * 60)
 
-            choice = self.cli.get_menu_choice("Select option", 0, 9)
+            choice = self.cli.get_menu_choice("Select option", 0, 11)
 
             if choice == 0:
                 print_success("Goodbye!")
@@ -103,6 +106,10 @@ class MenuHandlers:
                 break
             elif choice == 9:
                 self.clean_log_files()
+            elif choice == 10:
+                self.show_help()
+            elif choice == 11:
+                self.show_about()
 
     def show_user_info(self):
         clear_screen()
@@ -380,4 +387,69 @@ class MenuHandlers:
         except Exception as e:
             print_error(f"Error cleaning files: {e}")
 
+        wait_for_enter()
+
+    def show_help(self):
+            clear_screen()
+            print_section("HELP / QUICK GUIDE")
+
+            help_text = f"""
+    {Colors.BOLD}Smart Repository Manager CLI - Quick Guide{Colors.END}
+
+    {Colors.BOLD}Main Concepts:{Colors.END}
+      • The tool organizes your repositories by GitHub user.
+      • All data is stored in: {Colors.CYAN}~/smart_repository_manager/[username]/{Colors.END}
+      • SSH is the recommended way to interact with GitHub.
+
+    {Colors.BOLD}First Time Setup:{Colors.END}
+      1. Run the tool. It will start a 'Full System Checkup'.
+      2. When prompted, enter your {Colors.YELLOW}GitHub Personal Access Token (PAT){Colors.END}.
+         (Create one at https://github.com/settings/tokens with 'repo' scope)
+      3. The tool will guide you through SSH setup if needed.
+      4. After the checkup, you'll see the main menu.
+
+    {Colors.BOLD}Common Workflows:{Colors.END}
+      • {Colors.BOLD}Synchronize All Repos:{Colors.END} Go to {Colors.CYAN}Synchronization -> Sync All{Colors.END}
+      • {Colors.BOLD}Check SSH Status:{Colors.END} Go to {Colors.CYAN}SSH Configuration{Colors.END}
+      • {Colors.BOLD}Find a Repository:{Colors.END} Go to {Colors.CYAN}Repository Management -> Search{Colors.END}
+      • {Colors.BOLD}Free Up Disk Space:{Colors.END} Go to {Colors.CYAN}Storage Management{Colors.END}
+
+    {Colors.BOLD}Troubleshooting:{Colors.END}
+      • If sync fails, check {Colors.CYAN}SSH Configuration -> Test Connection{Colors.END}
+      • If you see API errors, check {Colors.CYAN}Token Information{Colors.END} for rate limits.
+      • For broken repositories, use {Colors.CYAN}Synchronization -> Sync with Repair{Colors.END}
+      • Run a full {Colors.CYAN}Restart{Colors.END} (option 8) to re-run the system checkup.
+    """
+            print(help_text)
+            wait_for_enter()
+
+    def show_about(self):
+        clear_screen()
+        print_section("ABOUT")
+
+        about_text = f"""
+{Colors.BOLD}Smart Repository Manager CLI{Colors.END}
+Version: {ver}
+{Colors.BOLD}A comprehensive tool for managing GitHub repositories.{Colors.END}
+
+{Colors.BOLD}Key Features:{Colors.END}
+  • 🔄 Intelligent Sync: Automatically clones missing and updates existing repos.
+  • 🔐 SSH Management: Complete toolkit for SSH key generation and configuration.
+  • 📊 Repository Insights: Language stats, health checks, and storage monitoring.
+  • 🗂️ Multi-User Support: Switch between different GitHub accounts seamlessly.
+
+{Colors.BOLD}Developed by:{Colors.END} Alexander Suvorov
+{Colors.BOLD}License:{Colors.END} BSD 3-Clause
+{Colors.BOLD}Copyright:{Colors.END} {copyright_}
+
+{Colors.BOLD}Project Links:{Colors.END}
+  • GitHub: {Colors.CYAN}https://github.com/smartlegionlab/smart-repository-manager-cli{Colors.END}
+  • Core Library: {Colors.CYAN}https://github.com/smartlegionlab/smart-repository-manager-core{Colors.END}
+  • GUI Version: {Colors.CYAN}https://github.com/smartlegionlab/smart-repository-manager-gui{Colors.END}
+
+{Colors.BOLD}Support:{Colors.END}
+  • Report issues on the GitHub repository.
+  • For questions, contact: {Colors.CYAN}smartlegiondev@gmail.com{Colors.END}
+"""
+        print(about_text)
         wait_for_enter()

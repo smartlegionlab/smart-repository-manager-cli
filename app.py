@@ -40,6 +40,8 @@ class EnhancedSmartGitCLI(SmartGitCLI):
         self.show_token_info = self.menu_handlers.show_token_info
         self.show_system_info = self.menu_handlers.show_system_info
         self.clean_log_files = self.menu_handlers.clean_log_files
+        self.show_help = self.menu_handlers.show_help
+        self.show_about = self.menu_handlers.show_about
 
         self.show_repository_menu = self.repository_manager.show_repository_menu
         self.list_all_repositories = self.repository_manager.list_all_repositories
