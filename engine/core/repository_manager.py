@@ -1,9 +1,12 @@
 # Copyright (©) 2026, Alexander Suvorov. All rights reserved.
 import datetime
+import shutil
 import subprocess
+import time
 from pathlib import Path
 
 from smart_repository_manager_core.services.archive_creator import ArchiveCreator
+from smart_repository_manager_core.services.download_service import DownloadService
 
 from engine.utils.text_decorator import (
     Colors,
@@ -24,6 +27,7 @@ from smart_repository_manager_core.utils.helpers import Helpers
 class RepositoryManager:
     def __init__(self, cli):
         self.cli = cli
+        self.download_service = DownloadService()
 
     def show_repository_menu(self):
         self.cli.menu_stack.append(self.cli.current_menu)
@@ -147,7 +151,7 @@ class RepositoryManager:
                 update_icon = Icons.WARNING if not repo.need_update else Icons.SUCCESS
 
             description = repo.description[:40] + "..." if repo.description and len(repo.description) > 40 else (
-                        repo.description or "-")
+                    repo.description or "-")
 
             rows.append([
                 repo.name[:50],
@@ -301,16 +305,25 @@ class RepositoryManager:
 
         print("Available repositories:")
         for i, repo in enumerate(self.cli.repositories, 1):
-            print(f"{i:2d}. {repo.name}")
+            local_indicator = f"{Icons.SUCCESS} " if repo.local_exists else f"{Icons.ERROR} "
+            print(f"{i:2d}. {local_indicator}{repo.name}")
 
         try:
             choice = self.cli.get_menu_choice(f"\nSelect repository (0 for exit)", 0, len(self.cli.repositories))
 
-            if not choice:
+            if not choice or choice == 0:
                 return
 
             repo = self.cli.repositories[choice - 1]
+            self._show_repository_actions(repo)
 
+        except (KeyboardInterrupt, EOFError):
+            print_warning("Cancelled")
+        except Exception as e:
+            print_error(f"Error: {e}")
+
+    def _show_repository_actions(self, repo):
+        while True:
             clear_screen()
             print_section(f"REPOSITORY: {repo.name}")
 
@@ -329,36 +342,250 @@ class RepositoryManager:
                 print(f"\n{Colors.YELLOW}🔐 SSH URL:{Colors.END}")
                 print(f"  • {repo.ssh_url}")
 
-                needs_update = False
-                reason = "Unknown"
+            print(f"\n{Colors.BOLD}📊 Local Status:{Colors.END}")
+            if repo.local_exists:
+                repo_path = Path.home() / "smart_repository_manager" / self.cli.current_user.username / "repositories" / repo.name
+                print(f"  • {Icons.SUCCESS} Exists: {repo_path}")
+
                 if self.cli.current_user:
                     needs_update, reason = self.cli.sync_service.check_repository_needs_update(
                         self.cli.current_user,
                         repo
                     )
-
-                print(f"\n{Colors.YELLOW}📊 Local Status:{Colors.END}")
-                print(f"  • {Colors.YELLOW}Exists: {Colors.END}{'✓' if repo.local_exists else '✗'}")
-                print(f"  • {Colors.YELLOW}Status: {Colors.END}{reason}")
-
-                if needs_update:
-                    print(f"\n{Colors.YELLOW}{Icons.WARNING} This repository needs updating.{Colors.END}")
-
-                    if self.cli.ask_yes_no("Update now?"):
-                        success, message, duration = self.cli.sync_service.sync_single_repository(
-                            self.cli.current_user,
-                            repo,
-                            "update"
-                        )
-
-                        if success:
-                            print_success(f"Updated successfully in {Helpers.format_duration(duration)}")
-                        else:
-                            print_error(f"Update failed: {message}")
+                    print(f"  • {Icons.WARNING if needs_update else Icons.SUCCESS} Status: {reason}")
             else:
-                print_error("No SSH URL available")
+                print(f"  • {Icons.ERROR} Not cloned locally")
 
-        except (KeyboardInterrupt, EOFError):
-            print_warning("Cancelled")
+            print(f"\n{Colors.BOLD}🎯 Actions:{Colors.END}")
+
+            action_number = 1
+
+            if repo.local_exists and repo.need_update:
+                print_menu_item(str(action_number), "Update Repository (Git Pull)", Icons.SYNC)
+                action_number += 1
+
+            if not repo.local_exists:
+                print_menu_item(str(action_number), "Clone Repository (Git Clone)", Icons.DOWNLOAD)
+                action_number += 1
+
+            if repo.local_exists:
+                print_menu_item(str(action_number), "Re-clone Repository", Icons.SETTINGS)
+                action_number += 1
+
+            if repo.local_exists:
+                print_menu_item(str(action_number), "Delete Local Copy", Icons.DELETE)
+                action_number += 1
+
+            print_menu_item(str(action_number), "Download ALL branches (ZIP)", Icons.DOWNLOAD)
+            action_number += 1
+
+            print_menu_item(str(action_number), "Show Repository Info", Icons.INFO)
+
+            print(f"\n{Colors.BOLD}{Colors.BLUE}0.{Colors.END} {Icons.BACK} Back")
+            print('=' * 60)
+
+            max_action = action_number
+
+            choice = self.cli.get_menu_choice("Select action", 0, max_action)
+
+            if choice == 0:
+                break
+
+            action_counter = 1
+
+            if repo.local_exists and repo.need_update:
+                if choice == action_counter:
+                    self._update_single_repository(repo)
+                    if choice != 0:
+                        wait_for_enter()
+                    continue
+                action_counter += 1
+
+            if not repo.local_exists:
+                if choice == action_counter:
+                    self._clone_single_repository(repo)
+                    if choice != 0:
+                        wait_for_enter()
+                    continue
+                action_counter += 1
+
+            if repo.local_exists:
+                if choice == action_counter:
+                    self._reclone_single_repository(repo)
+                    if choice != 0:
+                        wait_for_enter()
+                    continue
+                action_counter += 1
+
+            if repo.local_exists:
+                if choice == action_counter:
+                    self._delete_single_repository(repo)
+                    if choice != 0:
+                        wait_for_enter()
+                    continue
+                action_counter += 1
+
+            if choice == action_counter:
+                self._download_single_repository_all_branches(repo)
+                if choice != 0:
+                    wait_for_enter()
+                continue
+            action_counter += 1
+
+            if choice == action_counter:
+                self._show_detailed_repository_info(repo)
+
+    def _update_single_repository(self, repo):
+        if not repo.local_exists:
+            print_error("Repository not cloned locally")
+            return
+
+        print(f"\n{Colors.YELLOW}Updating {repo.name}...{Colors.END}")
+
+        success, message, duration = self.cli.sync_service.sync_single_repository(
+            self.cli.current_user,
+            repo,
+            "pull"
+        )
+
+        if success:
+            print_success(f"✓ {message} ({Helpers.format_duration(duration)})")
+            if message == 'Already up to date':
+                repo.need_update = False
+        else:
+            print_error(f"✗ {message}")
+
+    def _clone_single_repository(self, repo):
+        if repo.local_exists:
+            print_warning("Repository already exists locally")
+            if not self.cli.ask_yes_no("Clone anyway? (will fail if directory exists)"):
+                return
+
+        print(f"\n{Colors.YELLOW}Cloning {repo.name}...{Colors.END}")
+
+        success, message, duration = self.cli.sync_service.sync_single_repository(
+            self.cli.current_user,
+            repo,
+            "clone"
+        )
+
+        if success:
+            print_success(f"✓ {message} ({Helpers.format_duration(duration)})")
+            repo.local_exists = True
+            needs_update, _ = self.cli.sync_service.check_repository_needs_update(
+                self.cli.current_user,
+                repo
+            )
+            repo.need_update = needs_update
+        else:
+            print_error(f"✗ {message}")
+
+    def _reclone_single_repository(self, repo):
+        if not repo.local_exists:
+            print_warning("Repository not cloned locally. Cloning fresh...")
+            self._clone_single_repository(repo)
+            return
+
+        if not self.cli.ask_yes_no(f"Delete and re-clone {repo.name}?"):
+            return
+
+        repo_path = Path.home() / "smart_repository_manager" / self.cli.current_user.username / "repositories" / repo.name
+        if repo_path.exists():
+            shutil.rmtree(repo_path)
+            repo.local_exists = False
+
+        self._clone_single_repository(repo)
+
+    def _delete_single_repository(self, repo):
+        if not repo.local_exists:
+            print_error("Repository not cloned locally")
+            return
+
+        repo_path = Path.home() / "smart_repository_manager" / self.cli.current_user.username / "repositories" / repo.name
+
+        if not self.cli.ask_yes_no(f"{Colors.RED}Delete local copy of {repo.name}?{Colors.END}"):
+            return
+
+        try:
+            shutil.rmtree(repo_path)
+            repo.local_exists = False
+            repo.need_update = True
+            print_success(f"✓ Local copy of {repo.name} deleted")
         except Exception as e:
-            print_error(f"Error: {e}")
+            print_error(f"✗ Error deleting repository: {e}")
+
+    def _download_single_repository_all_branches(self, repo):
+        print(f"\n{Colors.YELLOW}Downloading ALL branches of {repo.name} as ZIP...{Colors.END}")
+
+        try:
+            start_time = time.time()
+
+            result = self.download_service.download_repository_with_all_branches(
+                repo_name=repo.name,
+                repo_url=repo.html_url,
+                token=self.cli.current_token,
+                username=self.cli.current_user.username,
+                verbose=True
+            )
+
+            duration = time.time() - start_time
+
+            if result.get("success"):
+                successful = result.get("successful", 0)
+                total = result.get("total_branches", 0)
+                size_mb = result.get("total_size_bytes", 0) / (1024 * 1024)
+
+                print_success(f"\n✓ Downloaded {successful}/{total} branches!")
+                print(f"\n{Colors.BOLD}Download Details:{Colors.END}")
+                print(f"  • Directory: {result.get('download_dir')}")
+                print(f"  • Total size: {size_mb:.2f} MB")
+                print(f"  • Time: {Helpers.format_duration(duration)}")
+                print(f"  • Internal workers used: {result.get('workers_used', 'N/A')}")
+
+                if result.get('results'):
+                    print(f"\n{Colors.BOLD}Downloaded branches:{Colors.END}")
+                    for branch_result in result.get('results', []):
+                        if branch_result['result'].get('success'):
+                            branch_name = branch_result['branch']
+                            branch_size = branch_result['result'].get('size_bytes', 0) / (1024 * 1024)
+                            print(f"  • {branch_name}: {branch_size:.2f} MB")
+
+                if self.cli.ask_yes_no("Open downloads folder?"):
+                    downloads_dir = Path(result.get('download_dir', ''))
+                    self.cli.open_folder(downloads_dir)
+            else:
+                print_error(f"\n✗ Download failed: {result.get('error', 'Unknown error')}")
+
+        except Exception as e:
+            print_error(f"\n✗ Error: {e}")
+
+    def _show_detailed_repository_info(self, repo):
+        clear_screen()
+        print_section(f"DETAILED INFO: {repo.name}")
+
+        size_info = self.download_service.get_repository_size_info(
+            repo_name=repo.name,
+            repo_url=repo.html_url,
+            token=self.cli.current_token
+        )
+
+        print(f"\n{Colors.BOLD}📊 GitHub API Info:{Colors.END}")
+        if size_info.get("success"):
+            print(f"  • Size: {size_info.get('size_formatted', 'Unknown')}")
+            print(f"  • Default branch: {size_info.get('default_branch', 'main')}")
+            print(f"  • Branches count: {size_info.get('branches_count', 1)}")
+        else:
+            print(f"  • Size info unavailable: {size_info.get('error', 'Unknown error')}")
+
+        downloads_result = self.download_service.list_downloaded_archives(self.cli.current_user.username)
+        if downloads_result.get("success"):
+            repo_archives = [a for a in downloads_result.get("archives", [])
+                             if a.get("repository") == repo.name]
+
+            if repo_archives:
+                print(f"\n{Colors.BOLD}📦 Downloaded Archives:{Colors.END}")
+                for archive in repo_archives[:5]:
+                    print(f"  • {archive['filename']}")
+                    print(f"    Size: {archive['size_formatted']} | Branch: {archive['branch']}")
+
+        wait_for_enter()
