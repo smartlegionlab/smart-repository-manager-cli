@@ -4,10 +4,15 @@ import subprocess
 import threading
 import time
 import json
+import shutil
 from pathlib import Path
 from datetime import datetime
+from typing import Tuple
 
 from smart_repository_manager_core.services.download_service import DownloadService
+from smart_repository_manager_core.services.structure_service import StructureService
+from smart_repository_manager_core.core.models.repository import Repository
+from smart_repository_manager_core.services.sync_service import SyncService
 
 from engine.utils.text_decorator import (
     Colors,
@@ -26,7 +31,14 @@ class SyncManager:
     def __init__(self, cli):
         self.cli = cli
         self.download_service = DownloadService()
+        self.structure_service = StructureService()
         self._stop_download = False
+
+        self.sync_service = None
+
+    def _ensure_sync_service(self):
+        if not self.sync_service and self.cli.current_token:
+            self.sync_service = SyncService(token=self.cli.current_token)
 
     def show_sync_menu(self):
         self.cli.menu_stack.append(self.cli.current_menu)
@@ -127,6 +139,39 @@ class SyncManager:
 
         if completed == total:
             print()
+
+    def _sync_single_repository(self, repo: Repository, operation: str = "sync") -> Tuple[bool, str, float]:
+        self._ensure_sync_service()
+
+        if not self.sync_service:
+            return False, "Sync service not initialized", 0.0
+
+        if not self.cli.current_user:
+            return False, "User not set", 0.0
+
+        try:
+            if not repo.clone_url and repo.html_url:
+                repo.clone_url = repo.html_url.replace("github.com", "github.com").rstrip('/') + '.git'
+
+            success, message, duration = self.sync_service.sync_single_repository(
+                self.cli.current_user,
+                repo,
+                operation
+            )
+
+            if success:
+                user_structure = self.structure_service.get_user_structure(self.cli.current_user.username)
+                if user_structure and "repositories" in user_structure:
+                    repos_path = user_structure["repositories"]
+                    repo_path = repos_path / repo.name
+
+                    if repo_path.exists() and (repo_path / '.git').exists():
+                        repo.local_exists = True
+
+            return success, message, duration
+
+        except Exception as e:
+            return False, f"Error: {str(e)}", 0.0
 
     def download_all_repositories(self):
         clear_screen()
@@ -432,7 +477,7 @@ class SyncManager:
         clear_screen()
         print_section("RE-CLONE ALL REPOSITORIES")
 
-        structure = self.cli.structure_service.get_user_structure(self.cli.current_user.username)
+        structure = self.structure_service.get_user_structure(self.cli.current_user.username)
         if "repositories" not in structure:
             print_error("Storage structure not found")
             return
@@ -463,13 +508,10 @@ class SyncManager:
             self._show_progress(i, len(repo_list), repo.name, "Re-cloning")
 
             repo_path = repos_path / repo.name
-            self.cli.file_operations.safe_remove(repo_path)
+            if repo_path.exists():
+                shutil.rmtree(repo_path, ignore_errors=True)
 
-            success, message, _ = self.cli.sync_service.sync_single_repository(
-                self.cli.current_user,
-                repo,
-                "clone"
-            )
+            success, message, _ = self._sync_single_repository(repo, "clone")
 
             result = {
                 "repo": repo.name,
@@ -493,7 +535,7 @@ class SyncManager:
         clear_screen()
         print_section("SYNC ALL REPOSITORIES")
 
-        structure = self.cli.structure_service.get_user_structure(self.cli.current_user.username)
+        structure = self.structure_service.get_user_structure(self.cli.current_user.username)
         if "repositories" not in structure:
             print_error("Storage structure not found")
             return
@@ -522,24 +564,16 @@ class SyncManager:
             print(f"\n[{i}/{len(repo_list)}] Sync: {repo.name}")
             self._show_progress(i, len(repo_list), repo.name, "Syncing")
 
-            if repo.local_exists:
-                success, message, _ = self.cli.sync_service.sync_single_repository(
-                    self.cli.current_user,
-                    repo,
-                    "pull"
-                )
+            if hasattr(repo, 'local_exists') and repo.local_exists:
+                success, message, _ = self._sync_single_repository(repo, "pull")
             else:
-                success, message, _ = self.cli.sync_service.sync_single_repository(
-                    self.cli.current_user,
-                    repo,
-                    "clone"
-                )
+                success, message, _ = self._sync_single_repository(repo, "clone")
 
             result = {
                 "repo": repo.name,
                 "success": success,
                 "message": message,
-                "action": "pull" if repo.local_exists else "clone"
+                "action": "pull" if (hasattr(repo, 'local_exists') and repo.local_exists) else "clone"
             }
             stats["results"].append(result)
 
@@ -572,7 +606,7 @@ class SyncManager:
             print('All repositories are up to date...')
             return
 
-        structure = self.cli.structure_service.get_user_structure(self.cli.current_user.username)
+        structure = self.structure_service.get_user_structure(self.cli.current_user.username)
         if "repositories" not in structure:
             print_error("Storage structure not found")
             return
@@ -596,11 +630,7 @@ class SyncManager:
             print(f"\n[{i}/{len(repo_list)}] Updating: {repo.name}")
             self._show_progress(i, len(repo_list), repo.name, "Updating")
 
-            success, message, _ = self.cli.sync_service.sync_single_repository(
-                self.cli.current_user,
-                repo,
-                "pull"
-            )
+            success, message, _ = self._sync_single_repository(repo, "pull")
 
             result = {
                 "repo": repo.name,
@@ -628,7 +658,7 @@ class SyncManager:
             print_error("User or repositories not loaded")
             return
 
-        structure = self.cli.structure_service.get_user_structure(self.cli.current_user.username)
+        structure = self.structure_service.get_user_structure(self.cli.current_user.username)
         if "repositories" not in structure:
             print_error("Storage structure not found")
             return
@@ -637,7 +667,6 @@ class SyncManager:
         missing_repos = []
 
         for repo in self.cli.repositories:
-
             repo_path = repos_path / repo.name
             if not repo_path.exists() or not (repo_path / '.git').exists():
                 missing_repos.append(repo)
@@ -667,11 +696,7 @@ class SyncManager:
             print(f"\n[{i}/{len(missing_repos)}] Cloning: {repo.name}")
             self._show_progress(i, len(missing_repos), repo.name, "Cloning")
 
-            success, message, _ = self.cli.sync_service.sync_single_repository(
-                self.cli.current_user,
-                repo,
-                "clone"
-            )
+            success, message, _ = self._sync_single_repository(repo, "clone")
 
             result = {
                 "repo": repo.name,
@@ -681,8 +706,10 @@ class SyncManager:
             stats["results"].append(result)
 
             if success:
-                repo.update_local_status(repos_path)
-                self.cli.ui_state.state['local_repositories_count'] += 1
+                if hasattr(repo, 'update_local_status'):
+                    repo.update_local_status(repos_path)
+                if hasattr(self.cli.ui_state, 'state'):
+                    self.cli.ui_state.state['local_repositories_count'] += 1
                 print_success(f"✓ Cloned successfully")
                 stats["cloned"] += 1
                 stats["successful"] += 1
@@ -707,7 +734,7 @@ class SyncManager:
         if not self.cli.ask_yes_no("Continue with repair sync?"):
             return
 
-        structure = self.cli.structure_service.get_user_structure(self.cli.current_user.username)
+        structure = self.structure_service.get_user_structure(self.cli.current_user.username)
         if "repositories" not in structure:
             print_error("Storage structure not found")
             return
@@ -716,7 +743,6 @@ class SyncManager:
 
         broken_repos = []
         for repo in self.cli.repositories:
-
             repo_path = repos_path / repo.name
             if repo_path.exists():
                 if not (repo_path / '.git').exists():
@@ -753,15 +779,10 @@ class SyncManager:
         }
 
         for i, repo in enumerate(self.cli.repositories, 1):
-
             print(f"\n[{i}/{len(self.cli.repositories)}] Processing: {repo.name}")
             self._show_progress(i, len(self.cli.repositories), repo.name, "Repairing")
 
-            success, message, _ = self.cli.sync_service.sync_single_repository(
-                self.cli.current_user,
-                repo,
-                "sync"
-            )
+            success, message, _ = self._sync_single_repository(repo, "sync")
 
             result = {
                 "repo": repo.name,

@@ -7,6 +7,7 @@ from pathlib import Path
 
 from smart_repository_manager_core.services.archive_creator import ArchiveCreator
 from smart_repository_manager_core.services.download_service import DownloadService
+from smart_repository_manager_core.services.sync_service import SyncService
 
 from engine.utils.text_decorator import (
     Colors,
@@ -28,6 +29,44 @@ class RepositoryManager:
     def __init__(self, cli):
         self.cli = cli
         self.download_service = DownloadService()
+        self.sync_service = None
+
+    def _ensure_sync_service(self):
+        if not self.sync_service and self.cli.current_token:
+            self.sync_service = SyncService(token=self.cli.current_token)
+
+    def _sync_single_repository(self, repo, operation: str = "sync"):
+        self._ensure_sync_service()
+
+        if not self.sync_service:
+            return False, "Sync service not initialized", 0.0
+
+        if not self.cli.current_user:
+            return False, "User not set", 0.0
+
+        try:
+            if not repo.clone_url and repo.html_url:
+                repo.clone_url = repo.html_url.replace("github.com", "github.com").rstrip('/') + '.git'
+
+            success, message, duration = self.sync_service.sync_single_repository(
+                self.cli.current_user,
+                repo,
+                operation
+            )
+
+            if success:
+                user_structure = self.cli.structure_service.get_user_structure(self.cli.current_user.username)
+                if user_structure and "repositories" in user_structure:
+                    repos_path = user_structure["repositories"]
+                    repo_path = repos_path / repo.name
+
+                    if repo_path.exists() and (repo_path / '.git').exists():
+                        repo.local_exists = True
+
+            return success, message, duration
+
+        except Exception as e:
+            return False, f"Error: {str(e)}", 0.0
 
     def show_repository_menu(self):
         self.cli.menu_stack.append(self.cli.current_menu)
@@ -342,13 +381,8 @@ class RepositoryManager:
             if repo.local_exists:
                 repo_path = Path.home() / "smart_repository_manager" / self.cli.current_user.username / "repositories" / repo.name
                 print(f"  • {Icons.SUCCESS} Exists: {repo_path}")
-
-                if self.cli.current_user:
-                    needs_update, reason = self.cli.sync_service.check_repository_needs_update(
-                        self.cli.current_user,
-                        repo
-                    )
-                    print(f"  • {Icons.WARNING if needs_update else Icons.SUCCESS} Status: {reason}")
+                print(
+                    f"  • {Icons.WARNING if repo.need_update else Icons.SUCCESS} Needs update: {'Yes' if repo.need_update else 'No'}")
             else:
                 print(f"  • {Icons.ERROR} Not cloned locally")
 
@@ -438,11 +472,7 @@ class RepositoryManager:
 
         print(f"\n{Colors.YELLOW}Updating {repo.name}...{Colors.END}")
 
-        success, message, duration = self.cli.sync_service.sync_single_repository(
-            self.cli.current_user,
-            repo,
-            "pull"
-        )
+        success, message, duration = self._sync_single_repository(repo, "pull")
 
         if success:
             print_success(f"✓ {message} ({Helpers.format_duration(duration)})")
@@ -459,20 +489,12 @@ class RepositoryManager:
 
         print(f"\n{Colors.YELLOW}Cloning {repo.name}...{Colors.END}")
 
-        success, message, duration = self.cli.sync_service.sync_single_repository(
-            self.cli.current_user,
-            repo,
-            "clone"
-        )
+        success, message, duration = self._sync_single_repository(repo, "clone")
 
         if success:
             print_success(f"✓ {message} ({Helpers.format_duration(duration)})")
             repo.local_exists = True
-            needs_update, _ = self.cli.sync_service.check_repository_needs_update(
-                self.cli.current_user,
-                repo
-            )
-            repo.need_update = needs_update
+            repo.need_update = False
         else:
             print_error(f"✗ {message}")
 
