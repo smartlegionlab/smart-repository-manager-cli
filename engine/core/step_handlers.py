@@ -7,10 +7,8 @@ from pathlib import Path
 from datetime import datetime
 
 from engine.utils.text_decorator import Colors, print_info, print_menu_item, print_success, print_section
-from smart_repository_manager_core.core.models.ssh_models import SSHStatus
 from smart_repository_manager_core.services.config_service import ConfigService
 from smart_repository_manager_core.services.github_service import GitHubService
-from smart_repository_manager_core.services.ssh_service import SSHService
 
 from engine import __version__ as ver
 from engine import __copyright__ as copyright_
@@ -157,83 +155,8 @@ class StepHandlers:
             return self.cli.log_result(False, f"Network check error: {str(e)}")
 
     # Step 3
-    def check_ssh_configuration_step(self) -> bool:
-        self.cli.log_step(3, "Checking SSH configuration")
-
-        try:
-            ssh = self.cli.ssh_service
-            ssh_validation = ssh.validate_ssh_configuration()
-
-            data = {
-                "status": ssh_validation.status.value,
-                "ssh_keys_found": len(ssh_validation.ssh_config.keys),
-                "github_auth_working": ssh_validation.github_authentication_working,
-                "can_clone": ssh_validation.can_clone_with_ssh,
-                "can_pull": ssh_validation.can_pull_with_ssh
-            }
-
-            if ssh_validation.ssh_config.keys:
-                keys_info = []
-                for key in ssh_validation.ssh_config.keys:
-                    key_status = "✅" if key.is_github_authenticated else "⚠️"
-                    keys_info.append(
-                        f"{key_status} {key.type.value}: {key.fingerprint or 'No fingerprint'}"
-                    )
-                data["keys"] = keys_info
-
-            if ssh_validation.errors:
-                data["errors"] = ssh_validation.errors[:3]
-
-            if ssh_validation.warnings:
-                data["warnings"] = ssh_validation.warnings[:3]
-
-            success = self.cli.log_result(
-                ssh_validation.status in [SSHStatus.VALID, SSHStatus.PARTIAL],
-                f"SSH status: {ssh_validation.status.value}",
-                data
-            )
-
-            if ssh_validation.ssh_config.keys:
-                test_success, test_msg, test_time = ssh.test_connection("github.com", "git")
-
-                self.cli.log_result(
-                    test_success,
-                    f"SSH connection to GitHub: {test_msg}",
-                    {"response_time": f"{test_time:.2f}s"}
-                )
-
-            if ssh_validation.errors and self.cli.ask_yes_no("Fix common SSH errors?"):
-                self.fix_ssh_issues(ssh, ssh_validation)
-
-            return success
-
-        except Exception as e:
-            return self.cli.log_result(False, f"SSH check error: {str(e)}")
-
-    @staticmethod
-    def fix_ssh_issues(ssh: SSHService, validation):
-        print(f"\n  {Colors.YELLOW}Fixing SSH issues...{Colors.END}")
-
-        if any("permission" in error.lower() for error in validation.errors):
-            success, message = ssh.fix_permissions()
-            print(f"  {'✅' if success else '❌'} {message}")
-
-        if any("known_hosts" in error.lower() for error in validation.errors):
-            success, message = ssh.add_github_to_known_hosts()
-            print(f"  {'✅' if success else '❌'} {message}")
-
-        if not validation.ssh_config.has_github_in_config:
-            success, message = ssh.create_ssh_config()
-            print(f"  {'✅' if success else '❌'} {message}")
-
-        if not validation.ssh_config.keys:
-            print(f"  {Colors.YELLOW}Generating new SSH key...{Colors.END}")
-            success, message, key_path = ssh.generate_ssh_key()
-            print(f"  {'✅' if success else '❌'} {message}")
-
-    # Step 4
     def set_user_step(self):
-        self.cli.log_step(4, "Managing GitHub Users")
+        self.cli.log_step(3, "Managing GitHub Users")
 
         try:
             config_service = ConfigService(self.cli.config_path)
@@ -385,9 +308,9 @@ class StepHandlers:
 
         return False
 
-    # Step 5
+    # Step 4
     def get_github_user_data_step(self) -> bool:
-        self.cli.log_step(5, "Getting GitHub user data")
+        self.cli.log_step(4, "Getting GitHub user data")
 
         if not self.cli.current_token:
             return self.cli.log_result(False, "No token set")
@@ -460,9 +383,9 @@ class StepHandlers:
         except Exception as e:
             return self.cli.log_result(False, f"Error getting user data: {str(e)}")
 
-    # Step 6
+    # Step 5
     def get_repositories_step(self) -> bool:
-        self.cli.log_step(6, "Getting GitHub repositories")
+        self.cli.log_step(5, "Getting GitHub repositories")
 
         if not self.cli.current_token or not self.cli.current_user:
             return self.cli.log_result(False, "User not set")
@@ -514,9 +437,9 @@ class StepHandlers:
         except Exception as e:
             return self.cli.log_result(False, f"Error loading repositories: {str(e)}")
 
-    # Step 7
+    # Step 6
     def check_local_repositories_step(self) -> bool:
-        self.cli.log_step(7, "Checking local repository copies")
+        self.cli.log_step(6, "Checking local repository copies")
 
         if not self.cli.current_user or not self.cli.repositories:
             return self.cli.log_result(False, "No user data or repositories available")
@@ -570,9 +493,9 @@ class StepHandlers:
         except Exception as e:
             return self.cli.log_result(False, f"Error checking local copies: {str(e)}")
 
-    # Step 8
+    # Step 7
     def check_need_update_repositories_step(self) -> bool:
-        self.cli.log_step(8, "Checking for updates needed")
+        self.cli.log_step(7, "Checking for updates needed")
         print_info('Please be patient...')
 
         user = self.cli.current_user.username
@@ -605,8 +528,6 @@ class StepHandlers:
             needs_update_count = 0
 
             for repo in repositories:
-                if not repo.ssh_url:
-                    continue
 
                 repo_path = repos_path / repo.name
 

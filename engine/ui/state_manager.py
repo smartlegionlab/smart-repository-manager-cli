@@ -12,9 +12,6 @@ class UIStateManager:
             'repositories_count': 0,
             'local_repositories_count': 0,
             'needs_update_count': 0,
-            'ssh_status': 'unknown',
-            'ssh_can_clone': False,
-            'ssh_can_pull': False,
             'is_syncing': False,
             'sync_progress': 0,
             'sync_current_repo': None,
@@ -81,7 +78,6 @@ class UIStateManager:
                 'local': self.state.get('local_repositories_count', 0),
                 'needs_update': self.state.get('needs_update_count', 0)
             },
-            'ssh_status': self.state.get('ssh_status'),
             'storage_mb': self.state.get('storage_size_mb', 0),
             'last_update': self.state.get('last_update')
         }

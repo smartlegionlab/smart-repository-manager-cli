@@ -637,8 +637,6 @@ class SyncManager:
         missing_repos = []
 
         for repo in self.cli.repositories:
-            if not repo.ssh_url:
-                continue
 
             repo_path = repos_path / repo.name
             if not repo_path.exists() or not (repo_path / '.git').exists():
@@ -718,8 +716,6 @@ class SyncManager:
 
         broken_repos = []
         for repo in self.cli.repositories:
-            if not repo.ssh_url:
-                continue
 
             repo_path = repos_path / repo.name
             if repo_path.exists():
@@ -757,9 +753,6 @@ class SyncManager:
         }
 
         for i, repo in enumerate(self.cli.repositories, 1):
-            if not repo.ssh_url:
-                stats["skipped"] += 1
-                continue
 
             print(f"\n[{i}/{len(self.cli.repositories)}] Processing: {repo.name}")
             self._show_progress(i, len(self.cli.repositories), repo.name, "Repairing")

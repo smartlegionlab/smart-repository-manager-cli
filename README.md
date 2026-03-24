@@ -1,6 +1,6 @@
 # Smart Repository Manager CLI <sup>v1.0.4</sup>
 
-A comprehensive command-line tool for managing GitHub repositories with advanced synchronization, SSH configuration management, and intelligent local repository management.
+A comprehensive command-line tool for managing GitHub repositories with advanced synchronization, and intelligent local repository management.
 
 ---
 
@@ -15,7 +15,6 @@ A comprehensive command-line tool for managing GitHub repositories with advanced
 
 Smart Repository Manager CLI is a powerful tool that helps you:
 - Manage GitHub repositories locally with intelligent synchronization
-- Configure and validate SSH for secure Git operations
 - Monitor repository health and status
 - Perform batch operations on multiple repositories
 - Maintain organized local storage structure
@@ -36,28 +35,21 @@ Smart Repository Manager CLI is a powerful tool that helps you:
 - **Repository Discovery**: Fetch all user repositories (public, private, forked, archived)
 - **API Rate Limit Monitoring**: Real-time GitHub API usage tracking
 
-### 3. **SSH Configuration & Management**
-- **SSH Validation**: Comprehensive SSH setup verification
-- **Key Generation**: Support for multiple key types (ED25519, RSA, ECDSA, DSA)
-- **Configuration Management**: Automatic SSH config creation and validation
-- **Connection Testing**: Verify SSH connectivity to GitHub
-- **Permission Fixing**: Automatic repair of SSH file permissions
-
-### 4. **Repository Management**
+### 3. **Repository Management**
 - **Repository Listing**: View all repositories with filtering options
 - **Search Functionality**: Find repositories by name
 - **Language Statistics**: Analyze repository language distribution
 - **Health Checking**: Verify local repository integrity
 - **Storage Management**: Monitor and manage local repository storage
 
-### 5. **Intelligent Synchronization**
+### 4. **Intelligent Synchronization**
 - **Smart Sync**: Automatic detection of needed operations (clone/update/repair)
 - **Batch Operations**: Process multiple repositories simultaneously
 - **Update Detection**: Identify repositories needing updates
 - **Auto-Repair**: Automatic fixing of broken repositories
 - **Progress Tracking**: Real-time sync progress and statistics
 
-### 6. **Local Storage Management**
+### 5. **Local Storage Management**
 - **Organized Structure**: Automatic directory organization by user
 - **Size Monitoring**: Track storage usage
 - **Cleanup Tools**: Remove individual or all local repositories
@@ -91,7 +83,6 @@ python app.py
 ### First Run
 1. **Initial Checkup**: The tool automatically runs a full system check
 2. **Token Setup**: Enter your GitHub Personal Access Token when prompted
-3. **SSH Configuration**: Follow prompts to set up SSH if not configured
 
 ### Main Menu Options
 
@@ -119,34 +110,23 @@ python app.py
 - **Clone Missing Only**: Only clone repositories not present locally
 - **Sync with Repair**: Fix broken repositories while syncing
 
-#### 5. **SSH Configuration**
-- Check SSH setup status
-- Generate new SSH keys
-- View existing SSH keys
-- Fix SSH permissions
-- Add GitHub to known_hosts
-- Create SSH configuration
-- Test SSH connection
-- View detailed SSH information
-
-#### 6. **Storage Management**
+#### 5. **Storage Management**
 - View storage usage statistics
 - Delete individual repositories
 - Clear all local repositories
 - Check storage information
 
-#### 7. **System Information**
+#### 6. **System Information**
 - View application configuration
 - Check system status
 - Review repository statistics
-- Monitor SSH status
 
-#### 8. **Restart**
+#### 7. **Restart**
 - Perform complete system verification
 - Identify and fix issues
 - Generate detailed logs
 
-#### 9. **Clean Temporary Files**
+#### 8. **Clean Temporary Files**
 - Remove temporary files
 - Free up disk space
 
@@ -169,16 +149,15 @@ python app.py
 
 ### Environment Setup
 1. **GitHub Token**: Create a token with `repo` scope at https://github.com/settings/tokens
-2. **SSH Keys**: Generate SSH keys if not already present
-3. **Git Configuration**: Ensure `user.name` and `user.email` are set globally
+2. **Git Configuration**: Ensure `user.name` and `user.email` are set globally
 
 ---
 
 ## ⚙️ Technical Details
 
 ### Core Components
-- **Models**: Data structures for users, repositories, tokens, and SSH configurations
-- **Services**: Business logic for GitHub, Git, SSH, network, and sync operations
+- **Models**: Data structures for users, repositories, and tokens
+- **Services**: Business logic for GitHub, Git, network, and sync operations
 - **CLI Interface**: User-friendly command-line interface with menus and prompts
 - **Validation**: Comprehensive input validation and error handling
 
@@ -202,7 +181,6 @@ python app.py
 - Keep local copies of all GitHub repositories synchronized
 - Quickly clone multiple repositories for new machine setup
 - Monitor repository health and fix issues automatically
-- Manage SSH configurations across multiple machines
 
 ---
 
@@ -225,7 +203,6 @@ Detailed JSON logs are saved for each system checkup, including:
 ## 🔒 Security Features
 
 - **Token Security**: GitHub tokens stored locally with appropriate permissions
-- **SSH Security**: Proper file permissions enforced for SSH keys
 - **Input Validation**: All user input validated before processing
 - **Error Handling**: Sensitive information not exposed in error messages
 
@@ -235,22 +212,16 @@ Detailed JSON logs are saved for each system checkup, including:
 
 ### Common Issues
 
-1. **SSH Connection Failed**
-   - Run SSH check from the SSH menu
-   - Generate new SSH key if needed
-   - Add SSH key to GitHub account
-
-2. **Token Authentication Failed**
+1. **Token Authentication Failed**
    - Verify token has correct scopes (repo)
    - Generate new token if expired
    - Check network connectivity to GitHub
 
-3. **Repository Sync Fails**
-   - Check SSH configuration
+2. **Repository Sync Fails**
    - Verify repository permissions
    - Ensure sufficient disk space
 
-4. **Network Issues**
+3. **Network Issues**
    - Run network check from system checkup
    - Verify DNS resolution
    - Check firewall settings
@@ -259,7 +230,6 @@ Detailed JSON logs are saved for each system checkup, including:
 - Review checkup result logs in `~/smart_repository_manager/<username>/logs/`
 - Check error messages in the CLI interface
 - Verify GitHub token permissions
-- Ensure SSH keys are added to GitHub
 
 ---
 
@@ -269,7 +239,6 @@ Detailed JSON logs are saved for each system checkup, including:
 - Use "Update Needed Only" for frequent syncs
 - Clean temporary files periodically
 - Monitor storage usage to prevent disk space issues
-- Generate SSH keys with appropriate types (ED25519 recommended)
 
 ---
 
@@ -312,7 +281,7 @@ This core library powers two complete implementations:
 A Python library for managing Git repositories with intelligent synchronization, SSH configuration validation, and GitHub integration.
 
 ### [GUI Version](https://github.com/smartlegionlab/smart-repository-manager-gui)  
-A desktop graphical user interface that offers visual management of repositories, SSH configuration, and synchronization tasks. Built for users who prefer point-and-click interaction.
+A desktop graphical user interface that offers visual management of repositories, and synchronization tasks. Built for users who prefer point-and-click interaction.
 
 Both implementations use this core library as their engine, ensuring consistent behavior and feature parity across interfaces.
 

@@ -15,7 +15,6 @@ from engine.utils.text_decorator import (
 )
 from smart_repository_manager_core.services.config_service import ConfigService
 from smart_repository_manager_core.services.github_service import GitHubService
-from smart_repository_manager_core.services.ssh_service import SSHService
 from smart_repository_manager_core.utils.helpers import Helpers
 
 from engine import __version__ as ver
@@ -65,21 +64,20 @@ class MenuHandlers:
             print_menu_item("2", "Token Information", Icons.KEY)
             print_menu_item("3", "Repository Management", Icons.REPO)
             print_menu_item("4", "Synchronization", Icons.SYNC)
-            print_menu_item("5", "SSH Configuration", Icons.SSH)
-            print_menu_item("6", "Storage Management", Icons.STORAGE)
-            print_menu_item("7", "System Information", Icons.INFO)
+            print_menu_item("5", "Storage Management", Icons.STORAGE)
+            print_menu_item("6", "System Information", Icons.INFO)
 
             print(f"\n{Colors.BOLD}⚙️  System:{Colors.END}")
-            print_menu_item("8", "Restart", Icons.CHECK)
-            print_menu_item("9", " Clean Log Files", Icons.DELETE)
+            print_menu_item("7", "Restart", Icons.CHECK)
+            print_menu_item("8", " Clean Log Files", Icons.DELETE)
 
-            print_menu_item("10", "Help / Quick Guide", Icons.INFO)
-            print_menu_item("11", "About", Icons.INFO)
+            print_menu_item("9", "Help / Quick Guide", Icons.INFO)
+            print_menu_item("10", "About", Icons.INFO)
 
             print(f"\n{Colors.BOLD}{Colors.RED}0.{Colors.END} {Icons.EXIT} Exit")
             print('=' * 60)
 
-            choice = self.cli.get_menu_choice("Select option", 0, 11)
+            choice = self.cli.get_menu_choice("Select option", 0, 10)
 
             if choice == 0:
                 print_success("Goodbye!")
@@ -96,19 +94,17 @@ class MenuHandlers:
             elif choice == 4:
                 self.cli.show_sync_menu()
             elif choice == 5:
-                self.cli.show_ssh_menu()
-            elif choice == 6:
                 self.cli.show_storage_menu()
-            elif choice == 7:
+            elif choice == 6:
                 self.show_system_info()
-            elif choice == 8:
+            elif choice == 7:
                 self.cli.run_full_checkup()
                 break
-            elif choice == 9:
+            elif choice == 8:
                 self.clean_log_files()
-            elif choice == 10:
+            elif choice == 9:
                 self.show_help()
-            elif choice == 11:
+            elif choice == 10:
                 self.show_about()
 
     def show_user_info(self):
@@ -216,14 +212,6 @@ class MenuHandlers:
         print(f"  • Private: {self.cli.ui_state.get('total_private', 0)}")
         print(f"  • Archived: {self.cli.ui_state.get('total_archived', 0)}")
         print(f"  • Forks: {self.cli.ui_state.get('total_forks', 0)}")
-
-        print(f"\n{Colors.BOLD}🔐 SSH Status:{Colors.END}")
-        ssh = SSHService()
-        validation = ssh.validate_ssh_configuration()
-        print(f"  • Status: {validation.status.value}")
-        print(f"  • Can Clone: {'✓' if validation.can_clone_with_ssh else '✗'}")
-        print(f"  • Can Pull: {'✓' if validation.can_pull_with_ssh else '✗'}")
-        print(f"  • GitHub Auth: {'✓' if validation.github_authentication_working else '✗'}")
 
         wait_for_enter()
 
@@ -399,23 +387,19 @@ class MenuHandlers:
     {Colors.BOLD}Main Concepts:{Colors.END}
       • The tool organizes your repositories by GitHub user.
       • All data is stored in: {Colors.CYAN}~/smart_repository_manager/[username]/{Colors.END}
-      • SSH is the recommended way to interact with GitHub.
 
     {Colors.BOLD}First Time Setup:{Colors.END}
       1. Run the tool. It will start a 'Full System Checkup'.
       2. When prompted, enter your {Colors.YELLOW}GitHub Personal Access Token (PAT){Colors.END}.
          (Create one at https://github.com/settings/tokens with 'repo' scope)
-      3. The tool will guide you through SSH setup if needed.
-      4. After the checkup, you'll see the main menu.
+      3. After the checkup, you'll see the main menu.
 
     {Colors.BOLD}Common Workflows:{Colors.END}
       • {Colors.BOLD}Synchronize All Repos:{Colors.END} Go to {Colors.CYAN}Synchronization -> Sync All{Colors.END}
-      • {Colors.BOLD}Check SSH Status:{Colors.END} Go to {Colors.CYAN}SSH Configuration{Colors.END}
       • {Colors.BOLD}Find a Repository:{Colors.END} Go to {Colors.CYAN}Repository Management -> Search{Colors.END}
       • {Colors.BOLD}Free Up Disk Space:{Colors.END} Go to {Colors.CYAN}Storage Management{Colors.END}
 
     {Colors.BOLD}Troubleshooting:{Colors.END}
-      • If sync fails, check {Colors.CYAN}SSH Configuration -> Test Connection{Colors.END}
       • If you see API errors, check {Colors.CYAN}Token Information{Colors.END} for rate limits.
       • For broken repositories, use {Colors.CYAN}Synchronization -> Sync with Repair{Colors.END}
       • Run a full {Colors.CYAN}Restart{Colors.END} (option 8) to re-run the system checkup.
@@ -434,7 +418,6 @@ Version: {ver}
 
 {Colors.BOLD}Key Features:{Colors.END}
   • 🔄 Intelligent Sync: Automatically clones missing and updates existing repos.
-  • 🔐 SSH Management: Complete toolkit for SSH key generation and configuration.
   • 📊 Repository Insights: Language stats, health checks, and storage monitoring.
   • 🗂️ Multi-User Support: Switch between different GitHub accounts seamlessly.
 

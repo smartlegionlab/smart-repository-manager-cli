@@ -338,10 +338,6 @@ class RepositoryManager:
             print(f"  • {Icons.CALENDAR} {Colors.YELLOW}Last Update: {Colors.END}{repo.last_update}")
             print(f"  • {Colors.YELLOW}URL: {Colors.CYAN}{repo.html_url}")
 
-            if repo.ssh_url:
-                print(f"\n{Colors.YELLOW}🔐 SSH URL:{Colors.END}")
-                print(f"  • {repo.ssh_url}")
-
             print(f"\n{Colors.BOLD}📊 Local Status:{Colors.END}")
             if repo.local_exists:
                 repo_path = Path.home() / "smart_repository_manager" / self.cli.current_user.username / "repositories" / repo.name

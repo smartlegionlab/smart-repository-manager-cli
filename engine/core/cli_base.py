@@ -29,7 +29,6 @@ from smart_repository_manager_core.core.models.user import User
 from smart_repository_manager_core.services.git_service import GitService
 from smart_repository_manager_core.services.github_service import GitHubService
 from smart_repository_manager_core.services.network_service import NetworkService
-from smart_repository_manager_core.services.ssh_service import SSHService
 from smart_repository_manager_core.services.structure_service import StructureService
 from smart_repository_manager_core.services.sync_service import SyncService
 
@@ -45,7 +44,6 @@ class SmartGitCLI:
         self.structure_service = StructureService()
         self.git_service = GitService()
         self.sync_service = SyncService()
-        self.ssh_service = SSHService()
         self.network_service = NetworkService()
         self.file_operations = FileOperations()
 

@@ -5,7 +5,6 @@ import traceback
 from engine.core.cli_base import SmartGitCLI
 from engine.core.menu_handlers import MenuHandlers
 from engine.core.repository_manager import RepositoryManager
-from engine.core.ssh_manager import SSHManager
 from engine.core.step_handlers import StepHandlers
 from engine.core.storage_manager import StorageManager
 from engine.core.sync_manager import SyncManager
@@ -29,7 +28,6 @@ class EnhancedSmartGitCLI(SmartGitCLI):
         self.menu_handlers = MenuHandlers(self)
         self.repository_manager = RepositoryManager(self)
         self.sync_manager = SyncManager(self)
-        self.ssh_manager = SSHManager(self)
         self.storage_manager = StorageManager(self)
 
         self._bind_methods()
@@ -56,16 +54,6 @@ class EnhancedSmartGitCLI(SmartGitCLI):
         self.sync_missing_repositories = self.sync_manager.sync_missing_repositories
         self.sync_with_repair = self.sync_manager.sync_with_repair
 
-        self.show_ssh_menu = self.ssh_manager.show_ssh_menu
-        self.show_ssh_info = self.ssh_manager.show_ssh_info
-        self.ssh_generate_key = self.ssh_manager.ssh_generate_key
-        self.ssh_show_public_keys = self.ssh_manager.ssh_show_public_keys
-        self.ssh_fix_permissions = self.ssh_manager.ssh_fix_permissions
-        self.ssh_add_github_known_hosts = self.ssh_manager.ssh_add_github_known_hosts
-        self.ssh_create_config = self.ssh_manager.ssh_create_config
-        self.ssh_test_connection = self.ssh_manager.ssh_test_connection
-        self.ssh_detailed_info = self.ssh_manager.ssh_detailed_info
-
         self.show_storage_menu = self.storage_manager.show_storage_menu
         self.get_storage_info = self.storage_manager.get_storage_info
         self.delete_local_repository = self.storage_manager.delete_local_repository
@@ -74,11 +62,10 @@ class EnhancedSmartGitCLI(SmartGitCLI):
 
         self.step1_structure = self.step_handlers.check_structure_step
         self.step2_internet = self.step_handlers.check_internet_connection_step
-        self.step3_ssh = self.step_handlers.check_ssh_configuration_step
-        self.step4_users = self.step_handlers.set_user_step
-        self.step5_user_data = self.step_handlers.get_github_user_data_step
-        self.step6_repositories = self.step_handlers.get_repositories_step
-        self.step7_local_check = self.step_handlers.check_local_repositories_step
+        self.step3_users = self.step_handlers.set_user_step
+        self.step4_user_data = self.step_handlers.get_github_user_data_step
+        self.step5_repositories = self.step_handlers.get_repositories_step
+        self.step6_local_check = self.step_handlers.check_local_repositories_step
         self.step8_update_check = self.step_handlers.check_need_update_repositories_step
 
     def run_full_checkup(self):
@@ -96,24 +83,19 @@ class EnhancedSmartGitCLI(SmartGitCLI):
                 if not self.ask_continue("Continue checking?"):
                     return
 
-            if not self._run_step_with_retry(self.step3_ssh, "ssh", "Checking SSH configuration"):
-                print_warning("SSH not configured, some features may not work")
-                if not self.ask_continue("Continue checking?"):
-                    return
-
-            if not self._run_step_with_retry(self.step4_users, "users", "Loading user configuration"):
+            if not self._run_step_with_retry(self.step3_users, "users", "Loading user configuration"):
                 print_error("No user selected")
                 return
 
-            if not self._run_step_with_retry(self.step5_user_data, "auth", "Authenticating user"):
+            if not self._run_step_with_retry(self.step4_user_data, "auth", "Authenticating user"):
                 print_error("Failed to get user data")
                 return
 
-            if not self._run_step_with_retry(self.step6_repositories, "repos", "Loading repositories"):
+            if not self._run_step_with_retry(self.step5_repositories, "repos", "Loading repositories"):
                 print_error("Failed to get repositories")
                 return
 
-            if not self._run_step_with_retry(self.step7_local_check, "local", "Checking local repositories"):
+            if not self._run_step_with_retry(self.step6_local_check, "local", "Checking local repositories"):
                 print_warning("Local repositories not verified")
 
             self.step8_update_check()
