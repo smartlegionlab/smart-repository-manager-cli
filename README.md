@@ -1,4 +1,4 @@
-# Smart Repository Manager CLI <sup>v1.0.5</sup>
+# Smart Repository Manager CLI <sup>v1.0.6</sup>
 
 A comprehensive command-line tool for managing GitHub repositories with advanced synchronization, and intelligent local repository management.
 
@@ -11,7 +11,18 @@ A comprehensive command-line tool for managing GitHub repositories with advanced
 [![GitHub forks](https://img.shields.io/github/forks/smartlegionlab/smart-repository-manager-cli?style=social)](https://github.com/smartlegionlab/smart-repository-manager-cli/network/members)
 
 ---
-## 🚀 Overview
+
+## ⚠️ Disclaimer
+
+**By using this software, you agree to the full disclaimer terms.**
+
+**Summary:** Software provided "AS IS" without warranty. You assume all risks.
+
+**Full legal disclaimer:** See [DISCLAIMER.md](https://github.com/smartlegionlab/smart-repository-manager-cli/blob/master/DISCLAIMER.md)
+
+---
+
+## Overview
 
 Smart Repository Manager CLI is a powerful tool that helps you:
 - Manage GitHub repositories locally with intelligent synchronization
@@ -21,7 +32,7 @@ Smart Repository Manager CLI is a powerful tool that helps you:
 
 ---
 
-## 📦 Core Features
+## Core Features
 
 ### 1. **System Check & Configuration**
 - **Full System Checkup**: Comprehensive 8-step verification process
@@ -57,7 +68,7 @@ Smart Repository Manager CLI is a powerful tool that helps you:
 
 ---
 
-## 🛠️ Installation
+## Installation
 
 ### Prerequisites
 - Python 3.8+
@@ -78,7 +89,7 @@ python app.py
 
 ---
 
-## 📋 Usage Guide
+## Usage Guide
 
 ### First Run
 1. **Initial Checkup**: The tool automatically runs a full system check
@@ -153,7 +164,7 @@ python app.py
 
 ---
 
-## ⚙️ Technical Details
+## Technical Details
 
 ### Core Components
 - **Models**: Data structures for users, repositories, and tokens
@@ -175,7 +186,7 @@ python app.py
 
 ---
 
-## 🎯 Use Case
+## Use Case
 
 ### For Developers
 - Keep local copies of all GitHub repositories synchronized
@@ -184,7 +195,7 @@ python app.py
 
 ---
 
-## 📊 Monitoring & Logging
+## Monitoring & Logging
 
 ### Checkup Results
 Detailed JSON logs are saved for each system checkup, including:
@@ -200,7 +211,7 @@ Detailed JSON logs are saved for each system checkup, including:
 
 ---
 
-## 🔒 Security Features
+## Security Features
 
 - **Token Security**: GitHub tokens stored locally with appropriate permissions
 - **Input Validation**: All user input validated before processing
@@ -208,7 +219,7 @@ Detailed JSON logs are saved for each system checkup, including:
 
 ---
 
-## 🚨 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
@@ -233,7 +244,7 @@ Detailed JSON logs are saved for each system checkup, including:
 
 ---
 
-## 📈 Performance Tips
+## Performance Tips
 
 - Run regular checkups to identify issues early
 - Use "Update Needed Only" for frequent syncs
@@ -242,7 +253,7 @@ Detailed JSON logs are saved for each system checkup, including:
 
 ---
 
-## 🔄 Updates & Maintenance
+## Updates & Maintenance
 
 ### Regular Maintenance Tasks
 1. **Run System Checkup**: Weekly to ensure everything works
@@ -257,7 +268,7 @@ Detailed JSON logs are saved for each system checkup, including:
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - GitHub API for repository access
 - Python community for excellent libraries
@@ -265,7 +276,7 @@ Detailed JSON logs are saved for each system checkup, including:
 
 ---
 
-## 📄 License
+## License
 
 BSD 3-Clause License - See [LICENSE](LICENSE) file for details.
 
@@ -287,21 +298,9 @@ Both implementations use this core library as their engine, ensuring consistent 
 
 ---
 
-## Disclaimer
-
-**Important**: This software is provided "as-is" without any warranties or guarantees. The developers are not responsible for:
-
-- Data loss or corruption
-- Repository damage or unintended modifications
-- Security breaches or token exposure
-- Network issues or connectivity problems
-- Any other direct or indirect damages
-
-**Use at your own risk**. Always maintain backups of your repositories and tokens. This project is in active development and may contain bugs or incomplete features.
-
 ## Development Status
 
-⚠️ **Active Development** - This project is under active development. Features may change, and stability is not guaranteed. Not recommended for production use without thorough testing.
+**Active Development** - This project is under active development. Features may change, and stability is not guaranteed. Not recommended for production use without thorough testing.
 
 ## Support
 
