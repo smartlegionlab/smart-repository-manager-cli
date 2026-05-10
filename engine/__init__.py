@@ -1,4 +1,4 @@
 # Copyright (©) 2026, Alexander Suvorov. All rights reserved.
 
-__version__ = 'v1.0.7'
+__version__ = 'v1.0.8'
 __copyright__ = "Copyright (©) 2026, Alexander Suvorov."
